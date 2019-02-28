@@ -67,23 +67,13 @@ def pos_ner_nc_processing(sentence):
 	print("------------------------------------------------------")
 	print(new_sentence.dep)
 	print("------------------------------------------------------")
-	print(new_sentence.text_ent)
-	print("------------------------------------------------------")
-	print(new_sentence.label)
-	print("------------------------------------------------------")
-	print(new_sentence.text_chunk)
-	print("------------------------------------------------------")
-	print(new_sentence.dep_root)
-	print("------------------------------------------------------")
-	print(new_sentence.dep_root_head)
-	print("------------------------------------------------------")
 
 	return new_sentence
 
 
 # look for the index of a word (child) in sent(sentence)
 def find_text_index(sent, child):
-	num = 0
+	num = -1 # I changed this from '0' to '-1' - jilyan
 	child = str(child).lower()
 	temp = child.split()
 	for k in range(0, len(sent.text_token)):
@@ -101,7 +91,7 @@ def find_ent_index(sent, ent):
 	for k in range(0, len(sent.text_ent)):
 		if ent in str(sent.text_ent[k]).lower():
 			return k
-			break
+			# break
 	return None
 
 
@@ -152,7 +142,7 @@ def details_extraction(sent, world, current_node, subj="", neg="", text=""):
 
 					if dative and sent.dep[num] == "dobj":
 						subject = compound_extraction(sent, str(sent.children[i][j]))
-						add_objects(sent, compound_extraction(sent, str(sent.children[i][j])), sent.dep[num],
+						add_objects(sent, str(subject), sent.dep[num],
 									sent.lemma[i], world, dative)
 					else:
 						add_objects(sent, compound_extraction(sent, str(sent.children[i][j])), sent.dep[num],
@@ -233,9 +223,9 @@ def details_extraction(sent, world, current_node, subj="", neg="", text=""):
 					if sent.children[num]:
 						dative = compound_extraction(sent, sent.children[num][0])
 				else:
-					add_objects(sent, compound_extraction(sent, str(sent.children[i][j])), sent.dep[num], sent.lemma[i],
-								world)
 					dative = compound_extraction(sent, str(sent.children[i][j]))
+					add_objects(sent, str(dative), sent.dep[num], sent.lemma[i],
+								world)
 
 				sent.finished_nodes[num] = 1
 
@@ -273,34 +263,65 @@ def details_extraction(sent, world, current_node, subj="", neg="", text=""):
 	else:
 		print("ERROR: Cannot find current index or node ", current_node, " has been recorded")
 
-
 def compound_extraction(sent, subj):
-	num = 0
-	subj = str(subj).lower()
+	num = -1
+	subj = subj.lower()
 	temp = subj.split()
+	print("This is the input of compound_extraction: " + subj)
 
+	# if there is no given word to check
 	if not temp:
 		return ""
 
-	for k in range(0, len(sent.text_token)):
-		text_token = str(sent.text_token[k]).lower()
-		if str(temp[-1]) == text_token:
+	# find index of given word
+	for k in range(len(sent.text_token)):
+		if temp[-1] == sent.text_token[k].lower():
 			num = k
 			break
+	
+	# go to end of supposed compound word
+	if num != -1:
+		while sent.dep[num] == 'compound':
+			num += 1
+		
+		subj = sent.text_token[num]
 
-	for c in sent.children[num]:
-		c = str(c).lower()
-
-		for k in range(0, len(sent.text_token)):
-			text_token = str(sent.text_token[k]).lower()
-			if text_token == c:
-				num = k
+		for k in range(num - 1, -1, -1):
+			if sent.dep[k] == "compound":
+				subj = str(sent.text_token[k]).lower() + " " + subj
+			else:
 				break
-
-		if sent.dep[num] == "compound":
-			sent.finished_nodes[num] = 1
-			return str(sent.text_token[num]).lower() + " " + subj
+	print("This is the output of compound_extraction: " + subj)
 	return subj
+
+
+# def compound_extraction(sent, subj):
+# 	num = 0
+# 	subj = str(subj).lower()
+# 	temp = subj.split()
+
+# 	if not temp:
+# 		return ""
+
+# 	for k in range(0, len(sent.text_token)):
+# 		text_token = str(sent.text_token[k]).lower()
+# 		if str(temp[-1]) == text_token:
+# 			num = k
+# 			break
+
+# 	for c in sent.children[num]:
+# 		c = str(c).lower()
+
+# 		for k in range(0, len(sent.text_token)):
+# 			text_token = str(sent.text_token[k]).lower()
+# 			if text_token == c:
+# 				num = k
+# 				break
+
+# 		if sent.dep[num] == "compound":
+# 			sent.finished_nodes[num] = 1
+# 			return str(sent.text_token[num]).lower() + " " + subj
+# 	return subj
 
 
 def char_conj_extractions(sent, subj):
@@ -1802,7 +1823,7 @@ def event_extraction(sentence, world, current_node):
 									print("test", test_io)
 									event_iobj.append(test_io)
 									isAdded = True
-								print("event_iobj: ", len(event_ioj), event_iobj)
+								print("event_iobj: ", len(event_iobj), event_iobj)
 								if sentence.head_text[i + k] == event_iobj[len(event_iobj) - 1]:
 									event_iobj[len(event_iobj) - 1] += "," + sentence.text_token[i + k]
 									print("event_iobj: ", len(event_iobj), event_iobj)
