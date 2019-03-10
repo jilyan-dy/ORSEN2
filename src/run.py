@@ -86,6 +86,24 @@ def extract_info(text):
     location = []
     event_frame = [seq_no, event_type, doer, doer_act, rec, rec_act, location]
 
+    extracted = None
+    for sent in list_of_sentences:
+        # extract all possible relations from sentence input
+        extracted = infoextraction.extract_relation(sent)
+
+        # remove relations that already exist in the global kb
+        extracted = infoextraction.remove_existing_relations_global(extracted)
+
+        # remove relations that already exist in the local kb
+        extracted = infoextraction.remove_existing_relations_local(extracted)
+
+        add new relations to local kb
+        if extracted != []:
+            infoextraction.add_relations_to_local(-1, extracted) # Jilyan How will you get the user id???
+        else:
+        result = infoextraction.find_unkown_word(sent)
+
+
 '''
 output = "Hello, I am ORSEN. Let's start."
 retrieved = None

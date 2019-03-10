@@ -1,10 +1,12 @@
-from src.db.concepts import DBO_Concept
+from src.db.concepts import DBO_Concept, DBO_Local_Concept
+from src.objects.concepts.Local_Concept import Local_Concept
 from src.objects.eventchain.EventFrame import EventFrame, FRAME_DESCRIPTIVE, FRAME_EVENT, FRAME_CREATION
 from src.objects.nlp.Sentence import Sentence
 from src.objects.storyworld.Attribute import Attribute
 from src.objects.storyworld.Character import Character
 from src.objects.storyworld.Object import Object
 from src.objects.storyworld.Setting import Setting
+from src.inputprocessor import DBO_Relation, Relation
 from neuralcoref import Coref
 import _operator
 
@@ -263,6 +265,7 @@ def details_extraction(sent, world, current_node, subj="", neg="", text=""):
 	else:
 		print("ERROR: Cannot find current index or node ", current_node, " has been recorded")
 
+# This is made by Jilyan
 def compound_extraction(sent, subj):
 	num = -1
 	subj = subj.lower()
@@ -284,17 +287,21 @@ def compound_extraction(sent, subj):
 		while sent.dep[num] == 'compound':
 			num += 1
 		
+		# set last of compund word to string
 		subj = sent.text_token[num]
 
+		# insert remaining compound word in front of string
 		for k in range(num - 1, -1, -1):
 			if sent.dep[k] == "compound":
 				subj = str(sent.text_token[k]).lower() + " " + subj
 			else:
 				break
+
+	print("**************************************************************************")
 	print("This is the output of compound_extraction: " + subj)
 	return subj
 
-
+# commented this one out because it was unable to completely get the whole compound nound
 # def compound_extraction(sent, subj):
 # 	num = 0
 # 	subj = str(subj).lower()
@@ -920,10 +927,12 @@ def event_extraction(sentence, world, current_node):
 				# Compound Subj
 				if sentence.dep[i - 1] == 'compound' and comp_c > 0 and sentence.dep[i] == 'nsubj':
 					# print("Compound and not poss")
-					if sentence.text_token[i - 1] != sentence.text_token[i]:
-						c_char = sentence.text_token[i - 1] + " " + sentence.head_text[i - 1]
-					else:
-						c_char = sentence.head_text[i - 1]
+					# if sentence.text_token[i - 1] != sentence.text_token[i]:
+					# 	c_char = sentence.text_token[i - 1] + " " + sentence.head_text[i - 1]
+					# else:
+					# 	c_char = sentence.head_text[i - 1]
+					# done by Jilyan
+					c_char = compound_extraction(sentence ,sentence.text_token[i])
 
 					event_subj.append(c_char)
 					if (i + 1) < len(sentence.dep):
@@ -934,7 +943,7 @@ def event_extraction(sentence, world, current_node):
 										event_subj[len(event_subj) - 1] += ',' + sentence.text_token[i + k]
 										if sentence.dep[i + k + 1] != 'cc' or sentence.dep[i + k + 1] != 'punct':
 											k = len(sentence.dep)
-					print("Added Char: ", c_char)
+					print("BAM Added Char: ", c_char)
 					comp_c -= 1
 					nsubj_c -= 1
 					if nsubj_c == 0:
@@ -947,7 +956,7 @@ def event_extraction(sentence, world, current_node):
 						p_char = sentence.text_token[i - 2] + sentence.text_token[i - 1] + " " + sentence.text_token[i]
 
 						event_subj.append(p_char)
-						print("Added Char: ", p_char)
+						print("BEM Added Char: ", p_char)
 						poss_c -= 1
 						nsubj_c -= 1
 
@@ -960,7 +969,7 @@ def event_extraction(sentence, world, current_node):
 						i - 1] + " " + sentence.text_token[i]
 
 					event_subj.append(cp_char)
-					print("Added Char: ", cp_char)
+					print("BOOM Added Char: ", cp_char)
 					poss_c -= 1
 					comp_c -= 1
 					nsubj_c -= 1
@@ -992,7 +1001,7 @@ def event_extraction(sentence, world, current_node):
 										isFound_char = True
 			if nsubj_c > 0 and isFound_char is False:
 				event_subj.append(sentence.text_token[i])
-				print("Added Char: ", sentence.text_token[i])
+				print("BOBA Added Char: ", sentence.text_token[i])
 				nsubj_c -= 1
 				if nsubj_c == 0:
 					isFound_char = True
@@ -1636,14 +1645,12 @@ def event_extraction(sentence, world, current_node):
 				if head_hold == event_prep[z] and event_pobj[z] == '-':
 					event_pobj[z] = sentence.text_token[i]
 					break
-					break
 
 			index = 0
 			if sentence.head_text[i] == 'by':
 				for x in range(0, len(sentence.text_token)):
 					if sentence.text_token[x] == 'by':
 						index = x
-						break
 						break
 				for z in range(0, len(event_prep)):
 					if sentence.head_text[index] == event_subj_act[z]:
@@ -1657,7 +1664,6 @@ def event_extraction(sentence, world, current_node):
 									if sentence.dep[y] == 'conj' and sentence.head_text[y] == test_pchar:
 										test_pchar = sentence.text_token[y]
 										event_subj[z] += "," + test_pchar
-						break
 						break
 
 		# ----END OF OBJECT EXTRACTION----#
@@ -1736,6 +1742,7 @@ def event_extraction(sentence, world, current_node):
 						else:
 							event_detail[x] = sentence.text_token[i]
 						advmod_c -= 1
+
 		# ----END OF OBJECT ACTION EXTRACTION----#
 		# ----START OF SPECIAL CASES----#
 
@@ -2042,3 +2049,140 @@ def add_event(type, subj, subj_act, prep, pobj, detail, dobj, attr, iobj, create
 				world.add_eventframe(new_eventframe)
 
 	print(world.event_chain)
+
+# check for unkown word one by one
+def find_unkown_word(sent):
+	print("------------------------------------------")
+	print("OMG I GOT CALLEED 2")
+
+	for i in range(len(sent.lemma)):
+		if str(sent.pos[i]).lower() == "noun" or str(sent.pos[i]).lower() == "propn":
+			if DBO_Concept.get_word_concept(sent.lemma[i]) == []:
+				print("Found this: " + sent.lemma[i])
+				return sent.lemma[i]
+
+	print("Found None")
+	return None
+
+# extract all possible relations from input based on templates
+def extract_relation(sent):
+	print("------------------------------------------")
+	print("OMG I GOT CALLEED")
+
+	first = 0
+	keywords = None
+	second = -1
+	string = ""
+	extracted = []
+	start = 0
+	flag = True
+
+	# get all relation templates from DB
+	rel_templates = DBO_Relation.get_all_relations_templates()
+
+	# in case sentence contains multiple relations
+	while start >= 0 and first == 0 and start < len(sent.pos) - 1:
+		first = -1
+		# find the first noun. Because all templates starts with noun
+		for i in range(start, len(sent.pos)):
+			if str(sent.pos[i]).lower() == "noun" or str(sent.pos[i]).lower() == "pron" or str(sent.pos[i]).lower() == "propn":
+				first = i
+				break
+				
+		# if there is a noun in the sentence
+		if first != -1 and first < len(sent.pos) - 1:
+			print("I found this as noun " + sent.text_token[first])
+			string = ""
+			
+			# concat lemma version of input
+			# lemma means base words
+			for i in sent.lemma:
+				string = string + " " + i
+
+			# check all possible templates if it fits
+			for i in range(len(rel_templates)):
+				flag = True
+				# for instances like "Jim jumped"
+				if rel_templates[i].keywords == "":
+					# if keywords is empty
+					if str(sent.pos[first+1]).lower() == rel_templates[i].second and sent.lemma[first+1] != "be":
+						# if pos of second matches with second of template
+						second = first+1
+						extracted.append(Relation.Relation(rel_templates[i].id, rel_templates[i].relation, sent.lemma[first], rel_templates[i].keywords, sent.lemma[second]))
+						print("--------------------------------------------------------------------------")
+						print("append 3")
+						print("appended: " + extracted[len(extracted)-1].__str__())
+
+				elif rel_templates[i].keywords in string:
+					# if a template that is not empty fits split the keywords of the specific template
+					keywords = rel_templates[i].keywords.split()
+					for x in range(len(keywords)):
+						if sent.lemma[first+1+x] != keywords[x]:
+							flag = False
+							break
+					if flag:
+						# if the keywords can be found immediatly after the noun found second will take position of the word right after keywords
+						second = first + len(keywords) + 1
+						if str(sent.pos[second]).lower() == rel_templates[i].second:
+							# if the pos tag of the second words matches the template take the words as a relation
+							extracted.append(Relation.Relation(rel_templates[i].id, rel_templates[i].relation, sent.lemma[first], rel_templates[i].keywords, sent.lemma[second]))
+							print("--------------------------------------------------------------------------")
+							print("append 1")
+							print("appended: " + extracted[len(extracted)-1].__str__())
+						else :
+							# if pos tag does not match revert second to -1
+							second = -1
+					else:
+						# if keywords not found immediatly after noun disregard
+						keywords = None
+
+			if second != -1 and second < len(sent.pos)-1:
+				# check in case of conjunction ex. "Penny can sing and dance"
+				if str(sent.text_token[second+1]).lower() == "and" and sent.pos[second] == sent.pos[second+2]:
+					extracted.append(Relation.Relation(rel_templates[i].id, rel_templates[i].relation, sent.lemma[first], rel_templates[i].keywords, sent.lemma[second+2]))
+					print("--------------------------------------------------------------------------")
+					print("append 2")
+					print("appended: " + extracted[len(extracted)-1].__str__())
+			
+			# check if there was a noun found
+			if first != -1:
+				start = first + 1
+				first = 0
+
+			else:
+				start = -1
+
+	return extracted
+
+# filter relations that do not exist in global knowledge base
+def remove_existing_relations_global(extracted):
+	result = []
+
+	for i in range(len(extracted)):
+		if DBO_Concept.get_concept_specified(extracted[i].first, extracted[i].relation, extracted[i].second) == None:
+			result.append(extracted[i])
+
+	return result
+
+# filter relations that do not exist in local knowledge base
+def remove_existing_relations_local(extracted):
+	result = []
+	temp = None
+
+	for i in range(len(extracted)):
+		temp = DBO_Local_Concept.get_concept_specified(extracted[i].first, extracted[i].relation, extracted[i].second)
+		if temp == None:
+			result.append(extracted[i])
+		else:
+			DBO_Local_Concept.update_score(temp.id, temp.score + 1) # JILYAN, YOU HAVE TO CHANGE THIS
+
+		temp = None
+
+	return result
+
+# add new relations to local knowledge base
+def add_relations_to_local(userid, extracted):
+	temp = None
+	for i in range(len(extracted)):
+		temp = Local_Concept(0, userid, extracted[i].first, extracted[i].relation, extracted[i].second, extracted[i].score, extracted[i].valid)
+		DBO_Local_Concept.add_concept(temp)
