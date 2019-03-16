@@ -17,6 +17,5 @@ class Local_Concept():
         self.score      = score
         self.valid      = valid
 
-
     def __str__(self):
-        return self.first +" "+ self.relation +" "+ self.second + " " + self.score + " " + self.valid
+        return str(self.id) + " " + self.first +" "+ self.relation +" "+ self.second + " " + str(self.score) + " " + str(self.valid)

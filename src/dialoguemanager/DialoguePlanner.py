@@ -145,7 +145,6 @@ def retrieve_output(coreferenced_text, world_id):
             output = Move.Move(template=["I don't know what to say."], type_num=MOVE_UNKNOWN)
 
     world.add_response(output)
-
     return output
 
 

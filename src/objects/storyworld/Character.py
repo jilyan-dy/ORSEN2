@@ -28,6 +28,6 @@ class Character(Object):
         new_char = Character(setting.id, setting.id)
 
         if setting.time != "" :
-            new_char.inSetting = Setting(setting.time,setting.time, time=setting.time)
+            new_char.inSetting = Setting(setting.time,setting.time, setting.time)
 
         return new_char

@@ -171,7 +171,7 @@ def get_concept_specified(first, relation, second):
         # Execute the SQL command
         cursor.execute(sql, (first, second, relation,))
         # Fetch all the rows in a list of lists.
-        result = cursor.fetchone()
+        result = cursor.fetchall()
 
         if result != None:
             id          = result[0]

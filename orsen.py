@@ -31,6 +31,8 @@ endstory = False
 endstorygen = False
 endconvo = False
 
+story_list = []
+
 def main_intent():
 	return None
 
@@ -42,7 +44,7 @@ def home():
 	
 @app.route('/orsen', methods=["POST"])
 def orsen():
-	global manwal_kawnt, storyId, endstory, endstorygen
+	global manwal_kawnt, storyId, endstory, endstorygen, story_list
 	
 	#print(json.dumps(request.get_json()))
 	requestJson = request.get_json()
@@ -87,7 +89,7 @@ def orsen():
 		rawTextQuery = requestJson["inputs"][0]["rawInputs"][0]["query"]
 	
 		manwal_kawnt =0
-		userId = requestJson["user"]["userId"]
+		userId = requestJson["user"]["userId"] # some really long id
 		data = {}
 		genstory = ""
 	
@@ -96,6 +98,7 @@ def orsen():
 		if endstory:
 			rawTextQuery = requestJson["inputs"][0]["rawInputs"][0]["query"]
 			#If user wants to create another story, create new story and reset reprompt counts
+			# if user wants to hear the whole story
 			if (not endstorygen) and (rawTextQuery == "yes" or rawTextQuery == "yes." or rawTextQuery == "sure" or rawTextQuery == "sure." or rawTextQuery == "yeah" or rawTextQuery == "yeah."):
 				#(edit-addhearstory-p2)swapped the contents of first and this condition
 				output_reply = generate_collated_story(server.get_world(storyId))
@@ -104,12 +107,13 @@ def orsen():
 				data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":""+output_reply+""+". Do you want to create another story?"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
 				endstorygen = True
 			
+			# user does not want to hear the full story
 			elif not endstorygen:
 				#(edit-addhearstory-p1) changed prompt from 'hear story' to 'create story'
 				data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Okay. Do you want to create another story?"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
 				endstorygen = True
 				
-			#generate story
+			# user wants to create a new story
 			elif endstorygen and (rawTextQuery == "yes" or rawTextQuery == "yes." or rawTextQuery == "sure" or rawTextQuery == "sure." or rawTextQuery == "yeah" or rawTextQuery == "yeah."):
 				#(edit-addhearstory-p2) swapped the contents of first and this condition
 				data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Okay then, Let's create a story. You start"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
@@ -119,29 +123,33 @@ def orsen():
 				new_world(storyId)
 				endstorygen = False
 				endstory = False
+				story_list = []
 				
-			#If the user wants to end anyway, 
+			#If the user does not want to create a new story 
 			else:
 				#inserted, generatestory
 				data = {"expectUserResponse": False, "finalResponse": {"speechResponse": {"textToSpeech": "Thank you. Goodbye"}}}
 				endstorygen = False
 				endstory = False
 				
-		#the user may end the conversation
+		#when the user says they want to stop telling the story
 		elif rawTextQuery == "bye" or rawTextQuery == "the end" or rawTextQuery == "the end.":
 			#(edit-addhearstory-p1) changed the prompt from 'create another story' to 'hear full story'
 			data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Wow. Thanks for the story. Do you want to hear the full story?"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
 			endstory = True
+
 		else:
+			story_list.append(rawTextQuery)
 			if getCategory(rawTextQuery) == CAT_STORY:
-				extract_info(rawTextQuery)
+				# you can pass user id here
+				extract_info(story_list)
 
 			#dialogue
 			retrieved = retrieve_output(rawTextQuery, storyId)
 
 			if retrieved.type_num == MOVE_HINT:
 				extract_info(retrieved.get_string_response())
-	
+
 			output_reply = retrieved.get_string_response()
 			data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":""+output_reply+""}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
 	
