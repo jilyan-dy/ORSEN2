@@ -15,39 +15,39 @@ import _operator
 
 
 def reading(filename):
-	with open(filename, 'r') as f:
-		userinput = f.read()
-	return userinput
+    with open(filename, 'r') as f:
+        userinput = f.read()
+    return userinput
 
 
 # user input goes through spacy
 # comment by Jilyan this function actually just copy pastes the output of spacy
 # user input goes through spacy in run.py before this function is called. it is not done here 
 def pos_ner_nc_processing(sentence):
-	new_sentence = Sentence()
-	new_sentence.words = sentence
-	for token in sentence:
-		new_sentence.children.append([])
-		new_sentence.text_token.append(token.text)
-		new_sentence.head_text.append(token.head.text)
-		new_sentence.lemma.append(token.lemma_)
-		new_sentence.pos.append(token.pos_)
-		new_sentence.tag.append(token.tag_)
-		new_sentence.dep.append(token.dep_)
+    new_sentence = Sentence()
+    new_sentence.words = sentence
+    for token in sentence:
+        new_sentence.children.append([])
+        new_sentence.text_token.append(token.text)
+        new_sentence.head_text.append(token.head.text)
+        new_sentence.lemma.append(token.lemma_)
+        new_sentence.pos.append(token.pos_)
+        new_sentence.tag.append(token.tag_)
+        new_sentence.dep.append(token.dep_)
 
-		new_sentence.finished_nodes.append(0)
-		for child in token.children:
-			new_sentence.children[len(new_sentence.children) - 1].append(child)
+        new_sentence.finished_nodes.append(0)
+        for child in token.children:
+            new_sentence.children[len(new_sentence.children) - 1].append(child)
 
-	for ent in sentence.ents:
-		new_sentence.text_ent.append(ent.text)
-		new_sentence.label.append(ent.label_)
+    for ent in sentence.ents:
+         new_sentence.text_ent.append(ent.text)
+         new_sentence.label.append(ent.label_)
 
-	for chunk in sentence.noun_chunks:
-		new_sentence.text_chunk.append(chunk.text)
-		new_sentence.dep_root.append(chunk.root.dep_)
-		new_sentence.dep_root_head.append(chunk.root.head.text)
-
+    for chunk in sentence.noun_chunks:
+        new_sentence.text_chunk.append(chunk.text)
+        new_sentence.dep_root.append(chunk.root.dep_)
+        new_sentence.dep_root_head.append(chunk.root.head.text)
+     
 	print("This is the output for pos_ner_nc_processing: ")
 	print("input/new_sentence.words: " + str(new_sentence.words))
 	print("children:	")
@@ -65,20 +65,20 @@ def pos_ner_nc_processing(sentence):
 	print("dep:			")
 	print(new_sentence.dep)
 
-	return new_sentence
+    return new_sentence
 
 
 # look for the index of a word (child) in sent(sentence)
 def find_text_index(sent, child):
-	num = -1 # I changed this from '0' to '-1' - jilyan
-	child = str(child).lower()
-	temp = child.split()
-	for k in range(0, len(sent.text_token)):
-		text_token = str(sent.text_token[k]).lower()
-		if (temp[-1] == text_token) and (sent.finished_nodes[k] == 0):
-			num = k
-			break
-	return num
+    num = -1 # I changed this from '0' to '-1' - jilyan
+    child = str(child).lower()
+    temp = child.split()
+    for k in range(0, len(sent.text_token)):
+        text_token = str(sent.text_token[k]).lower()
+        if (temp[-1] == text_token) and (sent.finished_nodes[k] == 0):
+            num = k
+            break
+    return num
 
 
 # checks if the list of entities extracted from spacy (sent) contains the word (ent)
@@ -94,171 +94,171 @@ def find_ent_index(sent, ent):
 
 # extracts story world details from parsed sentences
 def details_extraction(sent, world, current_node, subj="", neg="", text=""):
-	num = -1
-	subject = subj
-	current_index = -1
-	dative = ""
-	direct_object = ""
-	for i in range(0, len(sent.dep)):
-		if not text:
-			if (sent.dep[i] == current_node) and (sent.finished_nodes[i] == 0):
-				current_index = i
-				sent.finished_nodes[i] = 1
-				break
-		else:
-			if (sent.dep[i] == current_node) and (sent.finished_nodes[i] == 0) and (sent.text_token[i] == text):
-				current_index = i
-				sent.finished_nodes[i] = 1
-				break
+    num = -1
+    subject = subj
+    current_index = -1
+    dative = ""
+    direct_object = ""
+    for i in range(0, len(sent.dep)):
+        if not text:
+            if (sent.dep[i] == current_node) and (sent.finished_nodes[i] == 0):
+                current_index = i
+                sent.finished_nodes[i] = 1
+                break
+        else:
+            if (sent.dep[i] == current_node) and (sent.finished_nodes[i] == 0) and (sent.text_token[i] == text):
+                current_index = i
+                sent.finished_nodes[i] = 1
+                break
 
-	if (current_node == "ROOT") and (sent.pos[i] in ["NOUN", "PROPN"]):
-		add_objects(sent, sent.text_token[i], sent.dep[i], sent.lemma[i], world)
+    if (current_node == "ROOT") and (sent.pos[i] in ["NOUN", "PROPN"]):
+        add_objects(sent, sent.text_token[i], sent.dep[i], sent.lemma[i], world)
 
-	if neg == "":
-		is_negated = False
-	else:
-		is_negated = neg
+    if neg == "":
+        is_negated = False
+    else:
+        is_negated = neg
 
-	if current_index != -1:
-		i = current_index
-		for j in range(0, len(sent.children[i])):
-			num = find_text_index(sent, str(sent.children[i][j]))
-			if num != -1 and sent.finished_nodes[num] == 0 and \
-					sent.dep[num] in ["nsubj", "acomp", "attr", "nsubjpass", "dobj", "xcomp", "appos", "relcl",
-									  "npadvmod", "advmod", "pcomp"]:
-				# nominal subject
-				if sent.dep[num] == "nsubj":
-					subject = compound_extraction(sent, str(sent.children[i][j]))
-					add_objects(sent, str(subject), sent.dep[num], sent.lemma[i], world)
-					add_capability(sent, str(sent.text_token[i]), str(subject), world, current_index, i)
+    if current_index != -1:
+        i = current_index
+        for j in range(0, len(sent.children[i])):
+            num = find_text_index(sent, str(sent.children[i][j]))
+            if num != -1 and sent.finished_nodes[num] == 0 and \
+                    sent.dep[num] in ["nsubj", "acomp", "attr", "nsubjpass", "dobj", "xcomp", "appos", "relcl",
+                                      "npadvmod", "advmod", "pcomp"]:
+                # nominal subject
+                if sent.dep[num] == "nsubj":
+                    subject = compound_extraction(sent, str(sent.children[i][j]))
+                    add_objects(sent, str(subject), sent.dep[num], sent.lemma[i], world)
+                    add_capability(sent, str(sent.text_token[i]), str(subject), world, current_index, i)
 
-				# nominal subject (passive) or direct object
-				elif sent.dep[num] == "nsubjpass" or sent.dep[num] == "dobj":
-					if not subject:
-						subject = compound_extraction(sent, str(sent.children[i][j]))
+                # nominal subject (passive) or direct object
+                elif sent.dep[num] == "nsubjpass" or sent.dep[num] == "dobj":
+                    if not subject:
+                        subject = compound_extraction(sent, str(sent.children[i][j]))
 
-					if dative and sent.dep[num] == "dobj":
-						subject = compound_extraction(sent, str(sent.children[i][j]))
-						add_objects(sent, str(subject), sent.dep[num],
-									sent.lemma[i], world, dative)
-					else:
-						add_objects(sent, compound_extraction(sent, str(sent.children[i][j])), sent.dep[num],
-									sent.lemma[i], world)
+                    if dative and sent.dep[num] == "dobj":
+                        subject = compound_extraction(sent, str(sent.children[i][j]))
+                        add_objects(sent, str(subject), sent.dep[num],
+                                    sent.lemma[i], world, dative)
+                    else:
+                        add_objects(sent, compound_extraction(sent, str(sent.children[i][j])), sent.dep[num],
+                                    sent.lemma[i], world)
 
-					if sent.dep[num] == "dobj":
-						direct_object = sent.text_token[num]
+                    if sent.dep[num] == "dobj":
+                        direct_object = sent.text_token[num]
 
-				# adjectival complement
-				elif sent.dep[num] == "acomp":
-					add_attributes(sent, str(sent.children[i][j]), str(subject), world, is_negated)
-					is_negated = False
+                # adjectival complement
+                elif sent.dep[num] == "acomp":
+                    add_attributes(sent, str(sent.children[i][j]), str(subject), world, is_negated)
+                    is_negated = False
 
-				# attribute and appositional modifier
-				elif sent.dep[num] == "attr":
-					if not add_settings(sent, num, subject, is_negated, world):
-						add_objects(sent, compound_extraction(sent, str(sent.children[i][j])), sent.dep[num],
-									sent.lemma[i], world, subject, is_negated)
-						if not subject:
-							subject = sent.text_token[num]
+                # attribute and appositional modifier
+                elif sent.dep[num] == "attr":
+                    if not add_settings(sent, num, subject, is_negated, world):
+                        add_objects(sent, compound_extraction(sent, str(sent.children[i][j])), sent.dep[num],
+                                    sent.lemma[i], world, subject, is_negated)
+                        if not subject:
+                            subject = sent.text_token[num]
 
-					is_negated = False
+                    is_negated = False
 
-				# appositional modifier
-				elif sent.dep[num] == "appos":
-					if not add_settings(sent, num, subject, is_negated, world):
-						add_objects(sent, compound_extraction(sent, str(sent.children[i][j])), sent.dep[num],
-									sent.lemma[i], world, compound_extraction(sent, str(sent.head_text[num])))
+                # appositional modifier
+                elif sent.dep[num] == "appos":
+                    if not add_settings(sent, num, subject, is_negated, world):
+                        add_objects(sent, compound_extraction(sent, str(sent.children[i][j])), sent.dep[num],
+                                    sent.lemma[i], world, compound_extraction(sent, str(sent.head_text[num])))
 
-					is_negated = False
+                    is_negated = False
 
-				# open clausal compliment
-				elif sent.dep[num] in ["xcomp", "pcomp"]:
-					add_capability(sent, str(sent.lemma[num]), str(subject), world, num)
-					is_negated = False
+                # open clausal compliment
+                elif sent.dep[num] in ["xcomp", "pcomp"]:
+                    add_capability(sent, str(sent.lemma[num]), str(subject), world, num)
+                    is_negated = False
 
-				# relative clause modifier
-				elif sent.dep[num] == "relcl":
-					add_capability(sent, str(sent.text_token[num]), str(sent.head_text[num]), world, num)
+                # relative clause modifier
+                elif sent.dep[num] == "relcl":
+                    add_capability(sent, str(sent.text_token[num]), str(sent.head_text[num]), world, num)
 
-				# noun phrase as adverbial modifier
-				elif num != -1 and sent.dep[num] in ["npadvmod", "advmod"]:
-					add_settings(sent, num, subject, is_negated, world)
-					sent.finished_nodes[num] = 1
+                # noun phrase as adverbial modifier
+                elif num != -1 and sent.dep[num] in ["npadvmod", "advmod"]:
+                    add_settings(sent, num, subject, is_negated, world)
+                    sent.finished_nodes[num] = 1
 
-				if sent.children[num] is not None:
-					for c in sent.children[num]:
-						dep_index = find_text_index(sent, str(c))
-						if sent.finished_nodes[dep_index] == 0:
-							details_extraction(sent, world, sent.dep[num], subject, is_negated)
+                if sent.children[num] is not None:
+                    for c in sent.children[num]:
+                        dep_index = find_text_index(sent, str(c))
+                        if sent.finished_nodes[dep_index] == 0:
+                            details_extraction(sent, world, sent.dep[num], subject, is_negated)
 
-				sent.finished_nodes[num] = 1
+                sent.finished_nodes[num] = 1
 
-			# object predicate
-			elif num != -1 and sent.dep[num] == "oprd":
-				if direct_object:
-					add_attributes(sent, sent.text_token[num], direct_object, world)
-				else:
-					add_attributes(sent, sent.text_token[num], subject, world)
+            # object predicate
+            elif num != -1 and sent.dep[num] == "oprd":
+                if direct_object:
+                    add_attributes(sent, sent.text_token[num], direct_object, world)
+                else:
+                    add_attributes(sent, sent.text_token[num], subject, world)
 
-			# negation
-			elif num != -1 and sent.dep[num] == "neg":
-				sent.finished_nodes[num] = 1
-				is_negated = True
+            # negation
+            elif num != -1 and sent.dep[num] == "neg":
+                sent.finished_nodes[num] = 1
+                is_negated = True
 
-			# object of preposition
-			elif num != -1 and sent.dep[num] == "pobj":
-				if not add_settings(sent, num, subject, is_negated, world):
-					add_objects(sent, compound_extraction(sent, str(sent.children[i][j])), sent.dep[num], sent.lemma[i]
-								, world)
-				details_extraction(sent, world, sent.dep[num], subject, is_negated)
-				sent.finished_nodes[num] = 1
+            # object of preposition
+            elif num != -1 and sent.dep[num] == "pobj":
+                if not add_settings(sent, num, subject, is_negated, world):
+                    add_objects(sent, compound_extraction(sent, str(sent.children[i][j])), sent.dep[num], sent.lemma[i]
+                                , world)
+                details_extraction(sent, world, sent.dep[num], subject, is_negated)
+                sent.finished_nodes[num] = 1
 
-			# dative - the noun to which something is given
-			elif num != -1 and sent.dep[num] == "dative":
-				if str(sent.text_token[num]) == "to":
-					details_extraction(sent, world, sent.dep[num], subject, is_negated)
-					if sent.children[num]:
-						dative = compound_extraction(sent, sent.children[num][0])
-				else:
-					dative = compound_extraction(sent, str(sent.children[i][j]))
+            # dative - the noun to which something is given
+            elif num != -1 and sent.dep[num] == "dative":
+                if str(sent.text_token[num]) == "to":
+                    details_extraction(sent, world, sent.dep[num], subject, is_negated)
+                    if sent.children[num]:
+                        dative = compound_extraction(sent, sent.children[num][0])
+                else:
+                    dative = compound_extraction(sent, str(sent.children[i][j]))
 					add_objects(sent, str(dative), sent.dep[num], sent.lemma[i],
 								world)
 
-				sent.finished_nodes[num] = 1
+                sent.finished_nodes[num] = 1
 
-			elif num != -1 and sent.dep[num] == "agent":
-				for nc in range(0, len(sent.text_chunk)):
-					if sent.dep_root_head[nc] == sent.text_token[num]:
-						add_objects(sent, compound_extraction(sent, str(sent.text_chunk[nc])), sent.dep[num],
-									sent.lemma[i], world)
-						add_capability(sent, str(sent.lemma[i]), str(sent.text_chunk[nc]), world, current_index)
-						sent.finished_nodes[num] == 1
-						break
+            elif num != -1 and sent.dep[num] == "agent":
+                for nc in range(0, len(sent.text_chunk)):
+                    if sent.dep_root_head[nc] == sent.text_token[num]:
+                        add_objects(sent, compound_extraction(sent, str(sent.text_chunk[nc])), sent.dep[num],
+                                    sent.lemma[i], world)
+                        add_capability(sent, str(sent.lemma[i]), str(sent.text_chunk[nc]), world, current_index)
+                        sent.finished_nodes[num] == 1
+                        break
 
-			# adverbial clause modifier
-			# clausal complement
-			# conjunction
-			# preposition
-			# agent
-			# adverbial modifier
-			elif num != -1 \
-					and sent.dep[num] in ["advcl", "ccomp", "conj", "prep", "acl", "aux"]:
-				details_extraction(sent, world, sent.dep[num], subject, is_negated)
+            # adverbial clause modifier
+            # clausal complement
+            # conjunction
+            # preposition
+            # agent
+            # adverbial modifier
+            elif num != -1 \
+                    and sent.dep[num] in ["advcl", "ccomp", "conj", "prep", "acl", "aux"]:
+                details_extraction(sent, world, sent.dep[num], subject, is_negated)
 
 			# compound
 			elif num != -1 and sent.dep[num] == "compound":
-				if sent.pos[num] == "VERB":
-					details_extraction(sent, world, sent.dep[num], subject, is_negated, str(sent.children[i][j]))
-				elif sent.pos[num] in ["NOUN", "PROPN"]:
-					subject = compound_extraction(sent, str(sent.children[i][j]))
-					add_objects(sent, str(subject), sent.dep[num], sent.lemma[i], world)
-					add_capability(sent, str(sent.lemma[i]), str(subject), world, current_index)
-					sent.finished_nodes[num] = 1
+                if sent.pos[num] == "VERB":
+                    details_extraction(sent, world, sent.dep[num], subject, is_negated, str(sent.children[i][j]))
+                elif sent.pos[num] in ["NOUN", "PROPN"]:
+                    subject = compound_extraction(sent, str(sent.children[i][j]))
+                    add_objects(sent, str(subject), sent.dep[num], sent.lemma[i], world)
+                    add_capability(sent, str(sent.lemma[i]), str(subject), world, current_index)
+                    sent.finished_nodes[num] = 1
 
-			else:
-				print("WARNING: Dependecy ", sent.dep[num], " not included in the list")
-	else:
-		print("ERROR: Cannot find current index or node ", current_node, " has been recorded")
+            else:
+                print("WARNING: Dependecy ", sent.dep[num], " not included in the list")
+    else:
+        print("ERROR: Cannot find current index or node ", current_node, " has been recorded")
 
 # This is made by Jilyan
 def compound_extraction(sent, subj):
@@ -276,7 +276,7 @@ def compound_extraction(sent, subj):
 		if temp[-1] == sent.lemma[k].lower():
 			num = k
 			break
-	
+
 	# go to end of supposed compound word
 	if num != -1:
 		while sent.dep[num] == 'compound':
@@ -325,283 +325,283 @@ def compound_extraction(sent, subj):
 
 
 def char_conj_extractions(sent, subj):
-	print("ENTERED char_conj_extractions")
-	subj = str(subj).lower()
-	list_of_conj = [subj]
-	temp = str(subj).split()
-	if not temp:
-		return []
+    print("ENTERED char_conj_extractions")
+    subj = str(subj).lower()
+    list_of_conj = [subj]
+    temp = str(subj).split()
+    if not temp:
+        return []
 
-	subj = temp[-1]
-	for k in range(0, len(sent.head_text)):
-		head_text = str(sent.head_text[k]).lower()
-		if head_text == subj and sent.dep[k] == "conj":
-			subj = sent.text_token[k].lower()
-			print("ADDED THIS", sent.text_token[k].lower())
-			list_of_conj.append(compound_extraction(sent, subj))
-			sent.finished_nodes[k] = 1
-	return list_of_conj
+    subj = temp[-1]
+    for k in range(0, len(sent.head_text)):
+        head_text = str(sent.head_text[k]).lower()
+        if head_text == subj and sent.dep[k] == "conj":
+            subj = sent.text_token[k].lower()
+            print("ADDED THIS", sent.text_token[k].lower())
+            list_of_conj.append(compound_extraction(sent, subj))
+            sent.finished_nodes[k] = 1
+    return list_of_conj
 
 
 def add_capability(sent, attr, subject, world, num, i=""):
-	list_of_char = char_conj_extractions(sent, subject)
+    list_of_char = char_conj_extractions(sent, subject)
 
-	if sent.dep[num - 1] == "neg":
-		negation = True
-	else:
-		negation = False
+    if sent.dep[num - 1] == "neg":
+        negation = True
+    else:
+        negation = False
 
-	if sent.dep[num] == "relcl":
-		first_attribute = Attribute(DBO_Concept.RECEIVED_ACTION, sent.lemma[num], negation)
-	else:
-		first_attribute = Attribute(DBO_Concept.CAPABLE_OF, sent.lemma[num], negation)
+    if sent.dep[num] == "relcl":
+        first_attribute = Attribute(DBO_Concept.RECEIVED_ACTION, sent.lemma[num], negation)
+    else:
+        first_attribute = Attribute(DBO_Concept.CAPABLE_OF, sent.lemma[num], negation)
 
-	list_of_capabilities = [first_attribute]
-	head = attr.lower()
+    list_of_capabilities = [first_attribute]
+    head = attr.lower()
 
-	for j in range(0, len(sent.words)):
-		if sent.dep[j] in ['conj'] and (sent.head_text[j] == str(head)):
-			if find_neg_attr(sent, j):
-				new_attribute = Attribute(DBO_Concept.CAPABLE_OF, sent.text_token[j].lower(), True)
-			else:
-				new_attribute = Attribute(DBO_Concept.CAPABLE_OF, sent.text_token[j].lower(), False)
-			list_of_capabilities.append(new_attribute)
-			head = sent.text_token[j].lower()
+    for j in range(0, len(sent.words)):
+        if sent.dep[j] in ['conj'] and (sent.head_text[j] == str(head)):
+            if find_neg_attr(sent, j):
+                new_attribute = Attribute(DBO_Concept.CAPABLE_OF, sent.text_token[j].lower(), True)
+            else:
+                new_attribute = Attribute(DBO_Concept.CAPABLE_OF, sent.text_token[j].lower(), False)
+            list_of_capabilities.append(new_attribute)
+            head = sent.text_token[j].lower()
 
-	for cap in list_of_capabilities:
-		if cap.name not in ["is", "was", "are", "be", "am", "are", "were", "been", "being"]:
-			for c in list_of_char:
-				c = str(c).lower()
-				if c in world.characters:
-					new_attribute = check_duplicate_attribute(world.characters[c].attributes, cap)
-					if new_attribute is not None:
-						world.characters[c].attributes.append(new_attribute)
-				elif c in world.objects:
-					new_attribute = check_duplicate_attribute(world.objects[c].attributes, cap)
-					if new_attribute is not None:
-						world.objects[c].attributes.append(new_attribute)
+    for cap in list_of_capabilities:
+        if cap.name not in ["is", "was", "are", "be", "am", "are", "were", "been", "being"]:
+            for c in list_of_char:
+                c = str(c).lower()
+                if c in world.characters:
+                    new_attribute = check_duplicate_attribute(world.characters[c].attributes, cap)
+                    if new_attribute is not None:
+                        world.characters[c].attributes.append(new_attribute)
+                elif c in world.objects:
+                    new_attribute = check_duplicate_attribute(world.objects[c].attributes, cap)
+                    if new_attribute is not None:
+                        world.objects[c].attributes.append(new_attribute)
 
 
 def add_objects(sent, child, dep, lemma, world, subject="", negated=""):
-	list_of_char = char_conj_extractions(sent, child)
-	for c in list_of_char:
-		c = c.lower()
-		if (c not in world.characters) and (c not in world.objects):
-			if (DBO_Concept.get_concept_specified("character", DBO_Concept.CAPABLE_OF, lemma) or
-				DBO_Concept.get_concept_specified("person", DBO_Concept.CAPABLE_OF, lemma) is not None) \
-					and dep in ["nsubj", "agent", "compound"]:
-				new_character = Character()
-				new_character.name = c
-				new_character.id = c
-				new_character.attributes = []
-				new_character.type = []
-				new_character.inSetting = {'LOC': None, 'DATE': None, 'TIME': None}
-				if sent.location:
-					new_character.inSetting = sent.location
-				world.add_character(new_character)
-				world.characters[new_character.id].timesMentioned = 1
-				print("ADDED", new_character.name)
+    list_of_char = char_conj_extractions(sent, child)
+    for c in list_of_char:
+        c = c.lower()
+        if (c not in world.characters) and (c not in world.objects):
+            if (DBO_Concept.get_concept_specified("character", DBO_Concept.CAPABLE_OF, lemma) or
+                    DBO_Concept.get_concept_specified("person", DBO_Concept.CAPABLE_OF, lemma) is not None) \
+                    and dep in ["nsubj", "agent", "compound"]:
+                new_character = Character()
+                new_character.name = c
+                new_character.id = c
+                new_character.attributes = []
+                new_character.type = []
+                new_character.inSetting = {'LOC': None, 'DATE': None, 'TIME': None}
+                if sent.location:
+                    new_character.inSetting = sent.location
+                world.add_character(new_character)
+                world.characters[new_character.id].timesMentioned = 1
+                print("ADDED", new_character.name)
 
-			else:
-				new_object = Object()
-				new_object.name = c
-				new_object.id = c
-				new_object.attributes = []
-				new_object.type = []
-				new_object.inSetting = {'LOC': None, 'DATE': None, 'TIME': None}
-				if sent.location:
-					new_object.inSetting = sent.location
-				world.add_object(new_object)
-				world.objects[new_object.id].timesMentioned = 1
-				print("ADDED", new_object.name)
+            else:
+                new_object = Object()
+                new_object.name = c
+                new_object.id = c
+                new_object.attributes = []
+                new_object.type = []
+                new_object.inSetting = {'LOC': None, 'DATE': None, 'TIME': None}
+                if sent.location:
+                    new_object.inSetting = sent.location
+                world.add_object(new_object)
+                world.objects[new_object.id].timesMentioned = 1
+                print("ADDED", new_object.name)
 
-		elif c in world.objects:
-			if DBO_Concept.get_concept_specified("character", DBO_Concept.CAPABLE_OF, lemma) is not None \
-					and dep == "nsubj":
-				new_character = Character.convert_from_object(world.objects[c])
-				world.add_character(new_character)
-				world.characters[new_character.id].timesMentioned += 1
-			else:
-				world.objects[c].timesMentioned += 1
+        elif c in world.objects:
+            if DBO_Concept.get_concept_specified("character", DBO_Concept.CAPABLE_OF, lemma) is not None \
+                    and dep == "nsubj":
+                new_character = Character.convert_from_object(world.objects[c])
+                world.add_character(new_character)
+                world.characters[new_character.id].timesMentioned += 1
+            else:
+                world.objects[c].timesMentioned += 1
 
-		elif c in world.settings:
-			if DBO_Concept.get_concept_specified("character", DBO_Concept.CAPABLE_OF, lemma) is not None \
-					and dep == "nsubj":
-				new_character = Character.convert_from_setting(c)
-				world.add_character(new_character)
-				world.characters[new_character.id].timesMentioned += 1
+        elif c in world.settings:
+            if DBO_Concept.get_concept_specified("character", DBO_Concept.CAPABLE_OF, lemma) is not None \
+                    and dep == "nsubj":
+                new_character = Character.convert_from_setting(c)
+                world.add_character(new_character)
+                world.characters[new_character.id].timesMentioned += 1
 
-		elif c in world.characters:
-			world.characters[c].timesMentioned += 1
+        elif c in world.characters:
+            world.characters[c].timesMentioned += 1
 
-		# add amod and poss attribute
-		char_index = find_text_index(sent, c)
-		for ch in sent.children[char_index]:
-			index = find_text_index(sent, ch)
+        # add amod and poss attribute
+        char_index = find_text_index(sent, c)
+        for ch in sent.children[char_index]:
+            index = find_text_index(sent, ch)
 
-			if sent.dep[index] in ["amod", "nummod"]:
-				add_attributes(sent, sent.text_token[index], str(c), world)
-				sent.finished_nodes[index] = 1
+            if sent.dep[index] in ["amod", "nummod"]:
+                add_attributes(sent, sent.text_token[index], str(c), world)
+                sent.finished_nodes[index] = 1
 
-			elif sent.dep[index] in ["poss"]:
-				if sent.text_token[index] in world.characters:
-					add_attributes(sent, c, sent.text_token[index], world, "", DBO_Concept.HAS)
-					char = world.characters[sent.text_token[index]]
-					char.timesMentioned += 1
-					sent.finished_nodes[index] = 1
-				elif sent.text_token[index] in world.objects:
-					add_attributes(sent, c, sent.text_token[index], world, "", DBO_Concept.HAS)
-					obj = world.objects[sent.text_token[index]]
-					obj.timesMentioned += 1
-					sent.finished_nodes[index] = 1
-				else:
-					add_objects(sent, compound_extraction(sent, str(sent.text_token[index])), sent.dep[index], lemma,
-								world)
-					add_attributes(sent, c, compound_extraction(sent, str(sent.text_token[index])), world, "",
-								   DBO_Concept.HAS)
-	if dep in ["attr", "appos"]:
-		add_attributes(sent, child, subject, world, negated, DBO_Concept.IS_A)
-	if dep in ["dobj", "relcl"]:
-		if subject:
-			add_attributes(sent, child, subject, world, negated, DBO_Concept.HAS)
+            elif sent.dep[index] in ["poss"]:
+                if sent.text_token[index] in world.characters:
+                    add_attributes(sent, c, sent.text_token[index], world, "", DBO_Concept.HAS)
+                    char = world.characters[sent.text_token[index]]
+                    char.timesMentioned += 1
+                    sent.finished_nodes[index] = 1
+                elif sent.text_token[index] in world.objects:
+                    add_attributes(sent, c, sent.text_token[index], world, "", DBO_Concept.HAS)
+                    obj = world.objects[sent.text_token[index]]
+                    obj.timesMentioned += 1
+                    sent.finished_nodes[index] = 1
+                else:
+                    add_objects(sent, compound_extraction(sent, str(sent.text_token[index])), sent.dep[index], lemma,
+                                world)
+                    add_attributes(sent, c, compound_extraction(sent, str(sent.text_token[index])), world, "",
+                                   DBO_Concept.HAS)
+    if dep in ["attr", "appos"]:
+        add_attributes(sent, child, subject, world, negated, DBO_Concept.IS_A)
+    if dep in ["dobj", "relcl"]:
+        if subject:
+            add_attributes(sent, child, subject, world, negated, DBO_Concept.HAS)
 
 
 def check_duplicate_attribute(obj_attributes, attribute):
-	for i in obj_attributes:
-		if i.name == attribute.name:
-			if i.isNegated is not attribute.isNegated:
-				i.isNegated = attribute.isNegated
-			return None
-	return attribute
+    for i in obj_attributes:
+        if i.name == attribute.name:
+            if i.isNegated is not attribute.isNegated:
+                i.isNegated = attribute.isNegated
+            return None
+    return attribute
 
 
 def find_neg_attr(sent, int):
-	for i in range(0, len(sent.children[int])):
-		j = find_text_index(sent, str(sent.children[int][i]))
-		if sent.dep[j] == "neg":
-			return True
+    for i in range(0, len(sent.children[int])):
+        j = find_text_index(sent, str(sent.children[int][i]))
+        if sent.dep[j] == "neg":
+            return True
 
-	return False
+    return False
 
 
 def add_attributes(sent, child, subject, world, negation="", relation=""):
-	if relation == "":
-		relation = DBO_Concept.HAS_PROPERTY
-	print("FIRST ATTR", child.lower)
-	first_attribute = Attribute(relation, child.lower(), negation)
-	list_of_attributes = [first_attribute]
-	list_of_char = char_conj_extractions(sent, subject)
-	head = child.lower()
+    if relation == "":
+        relation = DBO_Concept.HAS_PROPERTY
+    print("FIRST ATTR", child.lower)
+    first_attribute = Attribute(relation, child.lower(), negation)
+    list_of_attributes = [first_attribute]
+    list_of_char = char_conj_extractions(sent, subject)
+    head = child.lower()
 
-	for i in range(0, len(sent.words)):
-		if (sent.dep[i] == 'conj') and (sent.head_text[i] == str(head)):
-			if find_neg_attr(sent, i):
-				new_attribute = Attribute(relation, sent.text_token[i].lower(), True)
+    for i in range(0, len(sent.words)):
+        if (sent.dep[i] == 'conj') and (sent.head_text[i] == str(head)):
+            if find_neg_attr(sent, i):
+                new_attribute = Attribute(relation, sent.text_token[i].lower(), True)
 
-			else:
-				new_attribute = Attribute(relation, sent.text_token[i].lower(), False)
-			list_of_attributes.append(new_attribute)
-			head = sent.text_token[i].lower()
-			sent.finished_nodes[i] = 1
+            else:
+                new_attribute = Attribute(relation, sent.text_token[i].lower(), False)
+            list_of_attributes.append(new_attribute)
+            head = sent.text_token[i].lower()
+            sent.finished_nodes[i] = 1
 
-	for c in list_of_char:
-		c = str(c).lower()
-		if c in world.characters:
-			for attr in list_of_attributes:
-				char = world.characters[c]
-				new_attribute = check_duplicate_attribute(char.attributes, attr)
+    for c in list_of_char:
+        c = str(c).lower()
+        if c in world.characters:
+            for attr in list_of_attributes:
+                char = world.characters[c]
+                new_attribute = check_duplicate_attribute(char.attributes, attr)
 
-				if new_attribute is not None:
-					char.attributes.append(new_attribute)
+                if new_attribute is not None:
+                    char.attributes.append(new_attribute)
 
-					if relation == DBO_Concept.IS_A:
-						print("RELATION", relation)
-						if not attr.isNegated:
-							char.type.append(attr.name)
+                    if relation == DBO_Concept.IS_A:
+                        print("RELATION", relation)
+                        if not attr.isNegated:
+                            char.type.append(attr.name)
 
-		elif c in world.objects:
-			for attr in list_of_attributes:
-				obj = world.objects[c]
-				new_attribute = check_duplicate_attribute(obj.attributes, attr)
-				if new_attribute is not None:
-					obj.attributes.append(new_attribute)
+        elif c in world.objects:
+            for attr in list_of_attributes:
+                obj = world.objects[c]
+                new_attribute = check_duplicate_attribute(obj.attributes, attr)
+                if new_attribute is not None:
+                    obj.attributes.append(new_attribute)
 
-					if relation == DBO_Concept.IS_A:
-						print("RELATION", relation)
-						if not attr.isNegated:
-							obj.type.append(attr.name)
+                    if relation == DBO_Concept.IS_A:
+                        print("RELATION", relation)
+                        if not attr.isNegated:
+                            obj.type.append(attr.name)
 
 
 def add_settings(sent, num, subject, negation, world):
-	if sent.location:
-		current_location = sent.location
-	else:
-		current_location = {'LOC': None, 'DATE': None, 'TIME': None}
+    if sent.location:
+        current_location = sent.location
+    else:
+        current_location = {'LOC': None, 'DATE': None, 'TIME': None}
 
-	list_of_char = []
-	is_setting = False
-	if subject:
-		list_of_char = char_conj_extractions(sent, subject)
+    list_of_char = []
+    is_setting = False
+    if subject:
+        list_of_char = char_conj_extractions(sent, subject)
 
-	if not negation:
-		ent_index = find_ent_index(sent, str(sent.text_token[num]))
-		if ent_index is not None:
-			label = sent.label[ent_index]
-			ent_text = sent.text_ent[ent_index]
-		else:
-			label = ""
-			ent_text = sent.text_token[num]
-		ent_text = str(ent_text).lower()
+    if not negation:
+        ent_index = find_ent_index(sent, str(sent.text_token[num]))
+        if ent_index is not None:
+            label = sent.label[ent_index]
+            ent_text = sent.text_ent[ent_index]
+        else:
+            label = ""
+            ent_text = sent.text_token[num]
+        ent_text = str(ent_text).lower()
 
-		if ent_text not in world.settings:
+        if ent_text not in world.settings:
 
-			is_location = \
-				label in ["LOC", "GPE"] or \
-				DBO_Concept.get_concept_specified(str(sent.text_token[num]), DBO_Concept.IS_A, "place") or \
-				DBO_Concept.get_concept_specified(str(sent.text_token[num]), DBO_Concept.IS_A, "location") or \
-				DBO_Concept.get_concept_specified(str(sent.text_token[num]), DBO_Concept.IS_A, "site")
+            is_location = \
+                label in ["LOC", "GPE"] or \
+                DBO_Concept.get_concept_specified(str(sent.text_token[num]), DBO_Concept.IS_A, "place") or \
+                DBO_Concept.get_concept_specified(str(sent.text_token[num]), DBO_Concept.IS_A, "location") or \
+                DBO_Concept.get_concept_specified(str(sent.text_token[num]), DBO_Concept.IS_A, "site")
 
-			is_date_time = \
-				label in ["DATE", "TIME"] or \
-				DBO_Concept.get_concept_specified(str(sent.text_token[num]), DBO_Concept.IS_A, "time period")
+            is_date_time = \
+                label in ["DATE", "TIME"] or \
+                DBO_Concept.get_concept_specified(str(sent.text_token[num]), DBO_Concept.IS_A, "time period")
 
-			if is_location or is_date_time:
+            if is_location or is_date_time:
 
-				if is_location:
-					type_name = "LOC"
-				else:
-					type_name = "TIME"
+                if is_location:
+                    type_name = "LOC"
+                else:
+                    type_name = "TIME"
 
-				is_setting = True
-				new_setting = Setting()
-				new_setting.id = ent_text
-				new_setting.name = ent_text
-				new_setting.type = type_name
-				current_location[type_name] = ent_text
-				world.add_setting(new_setting)
+                is_setting = True
+                new_setting = Setting()
+                new_setting.id = ent_text
+                new_setting.name = ent_text
+                new_setting.type = type_name
+                current_location[type_name] = ent_text
+                world.add_setting(new_setting)
 
-			sent.location = current_location
+            sent.location = current_location
 
-		else:
-			is_setting = True
+        else:
+            is_setting = True
 
-			if world.settings[str(sent.text_token[num])].type == "LOC":
-				current_location["LOC"] = ent_text
-			elif world.settings[str(sent.text_token[num])].type == "TIME":
-				current_location["TIME"] = ent_text
+            if world.settings[str(sent.text_token[num])].type == "LOC":
+                current_location["LOC"] = ent_text
+            elif world.settings[str(sent.text_token[num])].type == "TIME":
+                current_location["TIME"] = ent_text
 
-		for c in list_of_char:
-			if str(c) in world.characters and current_location:
-				char = world.characters[str(c)]
-				for key, value in current_location.items():
-					if value:
-						char.inSetting[key] = value
-			elif str(c) in world.objects and current_location:
-				obj = world.objects[str(c)]
-				for key, value in current_location.items():
-					if value:
-						obj.inSetting[key] = value
-	return is_setting
+        for c in list_of_char:
+            if str(c) in world.characters and current_location:
+                char = world.characters[str(c)]
+                for key, value in current_location.items():
+                    if value:
+                        char.inSetting[key] = value
+            elif str(c) in world.objects and current_location:
+                obj = world.objects[str(c)]
+                for key, value in current_location.items():
+                    if value:
+                        obj.inSetting[key] = value
+    return is_setting
 
 
 # ---------- rachel
@@ -613,128 +613,128 @@ CAT_ANSWER = 3
 
 # ie_categorizing
 def getCategory(sentence):
-	# checks if entry has "orsen"
-	if 'orsen' in sentence or 'im stuck' == sentence or "i'm stuck" == sentence or 'your turn' == sentence or 'help me' == sentence or 'help me start' == sentence:
-		return CAT_COMMAND
-	elif 'yes' == sentence or 'no' == sentence:
-		return CAT_ANSWER
-	else:
-		return CAT_STORY
+    # checks if entry has "orsen"
+    if 'orsen' in sentence or 'im stuck' == sentence or "i'm stuck" == sentence or 'your turn' == sentence or 'help me' == sentence or 'help me start' == sentence:
+        return CAT_COMMAND
+    elif 'yes' == sentence or 'no' == sentence or "don't like" in sentence or "dont like" in sentence or "wrong" in sentence:
+        return CAT_ANSWER
+    else:
+        return CAT_STORY
 
 
 def coref_resolution(s, sent_curr, sent_bef, world, isFirst):
-	print("ENTERED coref_resolution")
+    print("ENTERED coref_resolution")
+    
+    prn = []
+    noun = []
+    curr = sent_curr
+    bef = sent_bef
+    none = {0: None}
+    coref = Coref()
 
-	prn = []
-	noun = []
-	curr = sent_curr
-	bef = sent_bef
-	none = {0: None}
-	coref = Coref()
+    num_prn = 0
+    num_conj = 0
+    num_pron = 0
 
-	num_prn = 0
-	num_conj = 0
-	num_pron = 0
+    for x in range(0, len(s.pos)):
+        if s.tag[x] == 'PRP' or s.tag[x] == 'PRP$':
+            num_prn += 1
+        if s.pos[x] == 'CCONJ':
+            num_conj += 1
+        if s.lemma[x] == '-PRON-':
+            num_pron += 1
 
-	for x in range(0, len(s.pos)):
-		if s.tag[x] == 'PRP' or s.tag[x] == 'PRP$':
-			num_prn += 1
-		if s.pos[x] == 'CCONJ':
-			num_conj += 1
-		if s.lemma[x] == '-PRON-':
-			num_pron += 1
-
-	for x in range(0, num_prn):
-		if num_conj >= 1:
-			sent = coref.continuous_coref(utterances=sent_curr)
-			print("after coref.continuous_coref")
+    for x in range(0, num_prn):
+        if num_conj >= 1:
+            sent = coref.continuous_coref(utterances=sent_curr)
+            print("after coref.continuous_coref")
 			print(sent)
 			num_conj -= 1
-		elif isFirst is False:
-			sent = coref.one_shot_coref(utterances=sent_curr, context=sent_bef)
-			print("coref.one_shot_coref")
+        elif isFirst is False:
+            sent = coref.one_shot_coref(utterances=sent_curr, context=sent_bef)
+            print("coref.one_shot_coref")
 			print(sent)
 
 		mentions = coref.get_mentions()
 		print("mentions")
 		print(mentions)
 
-		rep = coref.get_most_representative()
-		scores = coref.get_scores()
-		propn_count = 0
-		noun_count = 0
+        rep = coref.get_most_representative()
+        scores = coref.get_scores()
+        propn_count = 0
+        noun_count = 0
 
 		print("rep")
 		print(rep)
 		print("scores")
 		print(scores)
 
-		for i in range(0, len(s.text_token)):
-			if s.pos[i] == 'PROPN':
-				propn_count += 1
-			if s.tag[i] == 'NN':
-				noun_count += 1
+        for i in range(0, len(s.text_token)):
+            if s.pos[i] == 'PROPN':
+                propn_count += 1
+            if s.tag[i] == 'NN':
+                noun_count += 1
 
-		if propn_count < 1:
-			if noun_count < 1 and isFirst is True:
-				print("propn 0 noun 0 first")
+        if propn_count < 1:
+            if noun_count < 1 and isFirst is True:
+                print("propn 0 noun 0 first")
 				print(sent_curr)
-				return sent_curr
+                return sent_curr
 
 		if len(rep) > 0 and len(scores) > 0:
 			print("if rep and scores not 0")
-			count = 0
+            count = 0
 
-			add_apos = []
-			for key, value in rep.items():
+            add_apos = []
+            for key, value in rep.items():
 				if str(key).lower() == "his" or str(key).lower() == "hers" or str(key).lower() == "their" or str(
 						key).lower() == "our" or str(key).lower() == "its":
 					add_apos.append(count)
 				count += 1
-			c = 0
-			for key, value in rep.items():
-				for i in range(0, len(add_apos)):
-					if add_apos[i] == c:
-						print("sent_curr before")
+            c = 0
+            for key, value in rep.items():
+               for i in range(0, len(add_apos)):
+                   if add_apos[i] == c:
+                       	print("sent_curr before")
 						print(sent_curr)
-						sent_curr = sent_curr.replace(str(key), str(value) + "'s")
+                       sent_curr = sent_curr.replace(str(key), str(value) + "'s")
 						print("sent_curr after")
 						print(sent_curr)
 
-			c += 1
-			hold_key = " " + str(key) + " "
-			hold_val = " " + str(value) + " "
-			sent_curr = sent_curr.replace(hold_key, hold_val)
+            c += 1
+            hold_key = " " + str(key) + " "
+            hold_val = " " + str(value) + " "
+            sent_curr = sent_curr.replace(hold_key, hold_val)
 
-			if (str(value) not in world.characters) and (str(value) not in world.objects):
-				if (str(key).lower() == "he") or (str(key).lower() == "his") or (str(key).lower() == "him"):
-					new_character = Character()
-					new_character.name = str(value)
-					new_character.id = str(value)
-					world.add_character(new_character)
-					world.characters[new_character.id].timesMentioned += 1
-				elif (str(key).lower() == "she") or (str(key).lower() == "her") or (str(key).lower() == "hers"):
-					new_character = Character()
-					new_character.name = str(value)
-					new_character.id = str(value)
-					new_character.gender = "F"
-					world.add_character(new_character)
-					world.characters[new_character.id].timesMentioned += 1
+            if (str(value) not in world.characters) and (str(value) not in world.objects):
+                if (str(key).lower() == "he") or (str(key).lower() == "his") or (str(key).lower() == "him"):
+                    new_character = Character()
+                    new_character.name = str(value)
+                    new_character.id = str(value)
+                    world.add_character(new_character)
+                    world.characters[new_character.id].timesMentioned += 1
+                elif (str(key).lower() == "she") or (str(key).lower() == "her") or (str(key).lower() == "hers"):
+                    new_character = Character()
+                    new_character.name = str(value)
+                    new_character.id = str(value)
+                    new_character.gender = "F"
+                    world.add_character(new_character)
+                    world.characters[new_character.id].timesMentioned += 1
 
-		# elif len(scores.get('single_scores')) > 1:
-		# extract scores
-		#    single_mention = scores.get('single_scores')
+        # elif len(scores.get('single_scores')) > 1:
+            # extract scores
+        #    single_mention = scores.get('single_scores')
 
-		#    pair_mention = scores.get('pair_scores')
+        #    pair_mention = scores.get('pair_scores')
 
-		#    single_sc_lib = []
-		#    pair_sc_lib = []
-		#    count = 0
-		#    for i in range(0, len(single_mention)):
-		#        if single_mention.get(i) == none.get(0):
-		#          count += 1
-		#        else:
-		#          single_sc_lib.append(float(single_mention.get(i)))
+        #    single_sc_lib = []
+        #    pair_sc_lib = []
+        #    count = 0
+        #    for i in range(0, len(single_mention)):
+        #        if single_mention.get(i) == none.get(0):
+        #          count += 1
+        #        else:
+        #          single_sc_lib.append(float(single_mention.get(i)))
 
 		# count -=1
 		# print("COUNT", count)
@@ -774,162 +774,162 @@ def coref_resolution(s, sent_curr, sent_bef, world, isFirst):
 
 		else:
 			print("if rep and scores is 0 or less")
-			isThis = ""
-			changeThis = ""
-			for i in range(0, len(s.text_token)):
-				if s.dep[i] == 'nsubj' and (s.pos[i] == 'PROPN' or s.pos[i] == 'NOUN'):
-					# print(s.dep[i], "check prop or noun", s.pos[i])
-					isThis = s.text_token[i]
-					for j in range(0, len(s.text_token)):
-						if s.dep[j] == 'nsubj' and s.pos[j] == 'PRON' or s.tag[j] == 'PRP$' or s.tag[j] == 'PRP':
-							# print(s.dep[j], "check pron", s.pos[j])
-							changeThis = s.text_token[j]
+            isThis = ""
+            changeThis = ""
+            for i in range(0, len(s.text_token)):
+                if s.dep[i] == 'nsubj' and (s.pos[i] == 'PROPN' or s.pos[i] == 'NOUN'):
+                    # print(s.dep[i], "check prop or noun", s.pos[i])
+                    isThis = s.text_token[i]
+                    for j in range(0, len(s.text_token)):
+                        if s.dep[j] == 'nsubj' and s.pos[j] == 'PRON' or s.tag[j] == 'PRP$' or s.tag[j] == 'PRP':
+                            # print(s.dep[j], "check pron", s.pos[j])
+                            changeThis = s.text_token[j]
 
-				elif s.pos[i] == 'NOUN' or s.pos[i] == 'PROPN':
-					isThis = s.text_token[i]
-					for j in range(0, len(s.text_token)):
-						if s.dep[j] == 'nsubj' and s.pos[j] == 'PRON' or s.tag[j] == 'PRP$' or s.tag[j] == 'PRP':
-							# print(s.dep[j], "check pron", s.pos[j])
-							changeThis = s.text_token[j]
+                elif s.pos[i] == 'NOUN' or s.pos[i] == 'PROPN':
+                    isThis = s.text_token[i]
+                    for j in range(0, len(s.text_token)):
+                        if s.dep[j] == 'nsubj' and s.pos[j] == 'PRON' or s.tag[j] == 'PRP$' or s.tag[j] == 'PRP':
+                            # print(s.dep[j], "check pron", s.pos[j])
+                            changeThis = s.text_token[j]
 
-				if len(isThis) > 0 and len(changeThis) > 0:
-					print("if isThis and changeThis has content")
-					if changeThis.lower() == 'her' or changeThis.lower() == 'his' or changeThis.lower() == 'our':
-						isThis = isThis + "'s"
+                if len(isThis) > 0 and len(changeThis) > 0:
+                    print("if isThis and changeThis has content")
+                    if changeThis.lower() == 'her' or changeThis.lower() == 'his' or changeThis.lower() == 'our':
+                        isThis = isThis + "'s"
 
-					split = sent_curr.split(" ")
-					for i in range(0, len(split)):
-						if split[i] == changeThis:
-							split[i] = isThis
-					sent_curr = " ".join(split)
-					print(sent_curr)
+                    split = sent_curr.split(" ")
+                    for i in range(0, len(split)):
+                        if split[i] == changeThis:
+                            split[i] = isThis
+                    sent_curr = " ".join(split)
+                    print(sent_curr)
 	print("leavinggg bye bye")
 
-	return sent_curr
+    return sent_curr
 
 
 def isAction(sentence):
-	isAction = False
-	be_forms = ["is", "are", "am", "were", "was", "feels", "looks"]
-	for k in range(0, len(be_forms)):
-		for i in range(0, len(sentence.text_token)):
-			if be_forms[k] == sentence.text_token[i]:
-				isAction = True
+    isAction = False
+    be_forms = ["is", "are", "am", "were", "was", "feels", "looks"]
+    for k in range(0, len(be_forms)):
+        for i in range(0, len(sentence.text_token)):
+            if be_forms[k] == sentence.text_token[i]:
+                isAction = True
 
-	return isAction
+    return isAction
 
 
 # ie_event_extract
 def event_extraction(sentence, world, current_node):
-	print("----- Entering EVENT EXTRACTION -----")
-	event_iobj = []
-	event_subj = []
-	event_subj_act = []
-	event_dobj = []
-	event_prep = []
-	event_detail = []
-	event_type = []
-	event_attr = []
-	event_pobj = []
-	event_create = []
-	# Getting the count of each annotation
-	nsubj_c = 0
-	comp_c = 0
-	poss_c = 0
-	acomp_c = 0
-	agent_c = 0
-	root_c = 0
-	neg_act_c = 0
-	pobj_c = 0
-	dobj_c = 0
-	neg_obj_c = 0
-	attr_c = 0
-	ccomp_c = 0
-	advcl_c = 0
-	relcl_c = 0
-	dative_c = 0
-	oprd_c = 0
-	xcomp_c = 0
-	advmod_c = 0
-	npadvmod_c = 0
-	prep_c = 0
-	expl_c = 0
+    print("----- Entering EVENT EXTRACTION -----")
+    event_iobj = []
+    event_subj = []
+    event_subj_act = []
+    event_dobj = []
+    event_prep = []
+    event_detail = []
+    event_type = []
+    event_attr = []
+    event_pobj = []
+    event_create = []
+    # Getting the count of each annotation
+    nsubj_c = 0
+    comp_c = 0
+    poss_c = 0
+    acomp_c = 0
+    agent_c = 0
+    root_c = 0
+    neg_act_c = 0
+    pobj_c = 0
+    dobj_c = 0
+    neg_obj_c = 0
+    attr_c = 0
+    ccomp_c = 0
+    advcl_c = 0
+    relcl_c = 0
+    dative_c = 0
+    oprd_c = 0
+    xcomp_c = 0
+    advmod_c = 0
+    npadvmod_c = 0
+    prep_c = 0
+    expl_c = 0
 
-	for i in range(0, len(sentence.dep)):
-		if sentence.dep[i] == 'nsubj' or sentence.dep[i] == 'nsubjpass':
-			nsubj_c += 1
-		elif sentence.dep[i] == 'compound':
-			comp_c += 1
-		elif sentence.dep[i] == 'poss':
-			poss_c += 1
-		elif sentence.dep[i] == 'acomp':
-			acomp_c += 1
-		elif sentence.dep[i] == 'agent':
-			agent_c += 1
+    for i in range(0, len(sentence.dep)):
+        if sentence.dep[i] == 'nsubj' or sentence.dep[i] == 'nsubjpass':
+            nsubj_c += 1
+        elif sentence.dep[i] == 'compound':
+            comp_c += 1
+        elif sentence.dep[i] == 'poss':
+            poss_c += 1
+        elif sentence.dep[i] == 'acomp':
+            acomp_c += 1
+        elif sentence.dep[i] == 'agent':
+            agent_c += 1
 
-		if sentence.dep[i] == 'ROOT':
-			root_c += 1
-			if sentence.dep[i - 1] == 'neg':
-				neg_act_c += 1
+        if sentence.dep[i] == 'ROOT':
+            root_c += 1
+            if sentence.dep[i - 1] == 'neg':
+                neg_act_c += 1
 
-		if sentence.dep[i] == 'pobj':
-			pobj_c += 1
-		elif sentence.dep[i] == 'dobj':
-			dobj_c += 1
-		elif sentence.dep[i] == 'attr':
-			attr_c += 1
-		elif sentence.dep[i] == 'ccomp':
-			ccomp_c += 1
-		elif sentence.dep[i] == 'advcl':
-			advcl_c += 1
-		elif sentence.dep[i] == 'relcl':
-			relcl_c += 1
-		elif sentence.dep[i] == 'dative':
-			dative_c += 1
-		elif sentence.dep[i] == 'oprd':
-			oprd_c += 1
-		elif sentence.dep[i] == 'xcomp':
-			xcomp_c += 1
-		elif sentence.dep[i] == 'advmod':
-			advmod_c += 1
-		elif sentence.dep[i] == 'npadvmod':
-			npadvmod_c += 1
-		elif sentence.dep[i] == 'prep':
-			prep_c += 1
-		elif sentence.dep[i] == 'pobj':
-			pobj_c += 1
-	# print("nsubj count: ", nsubj_c)
-	# print("root count: ", root_c)
-	# print("advmod count: ", advmod_c)
-	# print("dobj count: ", dobj_c)
-	isFound_char = False
-	isFound_char_act = False
-	isFound_obj = False
-	isFound_obj_act = False
-	isFound_mobj_act = False
-	isFound = False
+        if sentence.dep[i] == 'pobj':
+            pobj_c += 1
+        elif sentence.dep[i] == 'dobj':
+            dobj_c += 1
+        elif sentence.dep[i] == 'attr':
+            attr_c += 1
+        elif sentence.dep[i] == 'ccomp':
+            ccomp_c += 1
+        elif sentence.dep[i] == 'advcl':
+            advcl_c += 1
+        elif sentence.dep[i] == 'relcl':
+            relcl_c += 1
+        elif sentence.dep[i] == 'dative':
+            dative_c += 1
+        elif sentence.dep[i] == 'oprd':
+            oprd_c += 1
+        elif sentence.dep[i] == 'xcomp':
+            xcomp_c += 1
+        elif sentence.dep[i] == 'advmod':
+            advmod_c += 1
+        elif sentence.dep[i] == 'npadvmod':
+            npadvmod_c += 1
+        elif sentence.dep[i] == 'prep':
+            prep_c += 1
+        elif sentence.dep[i] == 'pobj':
+            pobj_c += 1
+    # print("nsubj count: ", nsubj_c)
+    # print("root count: ", root_c)
+    # print("advmod count: ", advmod_c)
+    # print("dobj count: ", dobj_c)
+    isFound_char = False
+    isFound_char_act = False
+    isFound_obj = False
+    isFound_obj_act = False
+    isFound_mobj_act = False
+    isFound = False
 
-	if agent_c > 0:
-		isPassive = True
+    if agent_c > 0:
+        isPassive = True
 
-	desc = ['being', 'be', 'been', 'is', 'are', 'was', 'were', 'am']
-	plural = ['we', 'they', 'them', 'our', 'them', 'us', 'you']
-	for i in range(0, len(sentence.dep)):
-		# ----START OF CHARACTER EXTRACTION----#
+    desc = ['being', 'be', 'been', 'is', 'are', 'was', 'were', 'am']
+    plural = ['we', 'they', 'them', 'our', 'them', 'us', 'you']
+    for i in range(0, len(sentence.dep)):
+        # ----START OF CHARACTER EXTRACTION----#
 
-		if nsubj_c == 0:
+        if nsubj_c == 0:
 
-			if sentence.dep[i] == 'expl':
-				expl_c += 1
-				print("EXPL", expl_c)
-				event_create.append(sentence.text_token[i].lower())
-				for y in range(0, len(sentence.dep)):
-					if sentence.dep[y] == 'attr':
-						event_subj.append(sentence.text_token[y])
-						hold_c = sentence.text_token[y]
-						attr_c -= 1
-		elif sentence.dep[i] == 'nsubj' or sentence.dep[i] == 'nsubjpass' and nsubj_c > 0:
-			if i > 0:
+            if sentence.dep[i] == 'expl':
+                expl_c += 1
+                print("EXPL", expl_c)
+                event_create.append(sentence.text_token[i].lower())
+                for y in range(0, len(sentence.dep)):
+                    if sentence.dep[y] == 'attr':
+                        event_subj.append(sentence.text_token[y])
+                        hold_c = sentence.text_token[y]
+                        attr_c -= 1
+        elif sentence.dep[i] == 'nsubj' or sentence.dep[i] == 'nsubjpass' and nsubj_c > 0:
+            if i > 0:
 				# Compound Subj
 				if sentence.dep[i - 1] == 'compound' and comp_c > 0 and sentence.dep[i] == 'nsubj':
 					# print("Compound and not poss")
@@ -940,7 +940,7 @@ def event_extraction(sentence, world, current_node):
 					# done by Jilyan
 					c_char = compound_extraction(sentence ,sentence.text_token[i])
 
-					event_subj.append(c_char)
+                    event_subj.append(c_char)
 					if (i + 1) < len(sentence.dep):
 						if sentence.dep[i + 1] == 'cc' or sentence.dep[i + 1] == 'punct':
 							for k in range(0, len(sentence.dep)):
@@ -949,68 +949,68 @@ def event_extraction(sentence, world, current_node):
 										event_subj[len(event_subj) - 1] += ',' + sentence.text_token[i + k]
 										if sentence.dep[i + k + 1] != 'cc' or sentence.dep[i + k + 1] != 'punct':
 											k = len(sentence.dep)
-					comp_c -= 1
-					nsubj_c -= 1
-					if nsubj_c == 0:
-						isFound_char = True
+                    comp_c -= 1
+                    nsubj_c -= 1
+                    if nsubj_c == 0:
+                        isFound_char = True
 
-				# Poss Subj
+                # Poss Subj
 				elif poss_c > 0 and sentence.dep[i - 2] == 'poss':
 					if sentence.dep[i - 1] == 'case':
 						# print("poss and not compound")
 						p_char = sentence.text_token[i - 2] + sentence.text_token[i - 1] + " " + sentence.text_token[i]
 
-						event_subj.append(p_char)
-						poss_c -= 1
-						nsubj_c -= 1
+                        event_subj.append(p_char)
+                        poss_c -= 1
+                        nsubj_c -= 1
 
-						if nsubj_c == 0:
-							isFound_char = True
+                        if nsubj_c == 0:
+                            isFound_char = True
 
 				elif sentence.dep[i - 3] == 'compound' and sentence.dep[i - 2] == 'poss' and comp_c > 0 and poss_c > 0:
 					print("compound and poss")
 					cp_char = sentence.text_token[i - 3] + " " + sentence.text_token[i - 2] + sentence.text_token[
 						i - 1] + " " + sentence.text_token[i]
 
-					event_subj.append(cp_char)
-					poss_c -= 1
-					comp_c -= 1
-					nsubj_c -= 1
-					if nsubj_c == 0:
-						isFound_char = True
+                    event_subj.append(cp_char)
+                    poss_c -= 1
+                    comp_c -= 1
+                    nsubj_c -= 1
+                    if nsubj_c == 0:
+                        isFound_char = True
 
 			if (i + 1) < len(sentence.dep) and isFound_char is False:
 				if sentence.dep[i + 1] == 'cc' or sentence.dep[i + 1] == 'punct':
-					# Multiple Subj
-					test_char = sentence.text_token[i]
-					isAdded = False
+                    # Multiple Subj
+                    test_char = sentence.text_token[i]
+                    isAdded = False
 
-					for k in range(0, len(sentence.dep)):
+                    for k in range(0, len(sentence.dep)):
 						if (i + k) < len(sentence.dep):
 							if sentence.dep[i + k] == 'conj':
-								print("event_subj: ", len(event_subj), event_subj)
-								if isAdded is False:
-									print("test", test_char)
-									event_subj.append(test_char)
-									isAdded = True
-								print("event_subj: ", len(event_subj), event_subj)
+                                print("event_subj: ", len(event_subj), event_subj)
+                                if isAdded is False:
+                                    print("test", test_char)
+                                    event_subj.append(test_char)
+                                    isAdded = True
+                                print("event_subj: ", len(event_subj), event_subj)
 								if sentence.head_text[i + k] == event_subj[len(event_subj) - 1]:
 									event_subj[len(event_subj) - 1] += "," + sentence.text_token[i + k]
-									print("event_subj: ", len(event_subj), event_subj)
-									isFound_mchar = True
+                                    print("event_subj: ", len(event_subj), event_subj)
+                                    isFound_mchar = True
 
-									nsubj_c -= 1
-									if nsubj_c == 0:
-										isFound_char = True
-			if nsubj_c > 0 and isFound_char is False:
-				event_subj.append(sentence.text_token[i])
-				nsubj_c -= 1
-				if nsubj_c == 0:
-					isFound_char = True
+                                    nsubj_c -= 1
+                                    if nsubj_c == 0:
+                                        isFound_char = True
+            if nsubj_c > 0 and isFound_char is False:
+                event_subj.append(sentence.text_token[i])
+                nsubj_c -= 1
+                if nsubj_c == 0:
+                    isFound_char = True
 
-		# ----END OF CHARACTER EXTRACTION -----#
-		# ----START OF CHARACTER ACTION EXTRACTION ----#
-
+        # ----END OF CHARACTER EXTRACTION -----#
+        # ----START OF CHARACTER ACTION EXTRACTION ----#
+        
 		if sentence.dep[i] == 'aux' or sentence.dep[i] == 'auxpass' and (i + 1) < len(sentence.dep):
 			isAdded = False
 			isFound = False

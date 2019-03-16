@@ -18,7 +18,11 @@ def new_world(id):
 
 def extract_info(text):
     print("EXTRACTING........")
+    world = server.get_world(world_id)
+    document = nlp(str(text))
+    sentences = [sent.string.strip() for sent in document.sents]
     list_of_sentences = []
+    list_of_sent = []
     characters = []
 
     world = server.get_world(world_id)
@@ -29,7 +33,7 @@ def extract_info(text):
     sentences_curr = nlp(sentences_curr) # go thru spacy
     print(sentences_curr)
     list_of_sentences.append(infoextraction.pos_ner_nc_processing(sentences_curr))
-    
+
     if len(text) > 1:
         document = nlp(str(text[len(text)-2]))
         sentences_prev = [sent.string.strip() for sent in document.sents]
@@ -37,7 +41,8 @@ def extract_info(text):
         sentences_prev = nlp(sentences_prev) # go thru spacy
         list_of_sentences.append(infoextraction.pos_ner_nc_processing(sentences_prev))
 
-    # DetailsExtraction
+
+     # DetailsExtraction
     if len(text) > 1:
         list_of_sentences[0] = infoextraction.coref_resolution(list_of_sentences[0], list_of_sentences[0], list_of_sentences[1], world, False)
 

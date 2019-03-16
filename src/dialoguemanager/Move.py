@@ -1,14 +1,16 @@
 class Move:
 
-    def __init__(self, move_id=-1, response_type="", template=[], blanks=[], blank_index=[], type_num=-1, subject=None):
-        self.move_id = move_id
+    def __init__(self, move_id=-1, response_type="", template=[], blanks=[], blank_index=[], type_num=-1, subject=None, concept_id=-1, dbtype = ""):
+        self.move_id = move_id #ID template
         self.type = type
-        self.template = template
+        self.template = template #response "I see, what happened next? etc" Naka list siya, hinahati by _start_
         self.blanks = blanks
         self.response_type = response_type
         self.blank_index = blank_index
-        self.type_num = type_num
+        self.type_num = type_num #What type of dialogue move
         self.subject = subject
+        self.concept_id = concept_id #ID of which concept was used
+        self.dbtype = dbtype #local or global?
 
     def fill_blank(self, fill):
         for i in range(0, len(fill)):

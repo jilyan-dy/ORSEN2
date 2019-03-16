@@ -1,13 +1,29 @@
 from ..SqlConnector import SqlConnConcepts
 from src.objects.concepts.Local_Concept import Local_Concept
 
+IS_A = "IsA"
+PART_OF = "PartOf"
+AT_LOCATION = "AtLocation"
+HAS_PREREQ = "HasPrerequisite"
+CREATED_BY = "CreatedBy"
+USED_FOR = "UsedFor"
+CAUSES = "Causes"
+DESIRES = "Desires"
+CAPABLE_OF = "CapableOf"
+HAS_PROPERTY = "HasProperty"
+HAS = "Has"
+RECEIVED_ACTION = "ReceivedAction"
+
+RELATIONS = [IS_A, PART_OF, AT_LOCATION, HAS_PREREQ, CREATED_BY, USED_FOR, CAUSES, DESIRES, CAPABLE_OF, HAS_PROPERTY,
+             HAS, RECEIVED_ACTION]
+
 def get_concept_by_id(id):
     sql = "SELECT idlocal, " \
           "userid," \
           "relation," \
           "first," \
           "second, " \
-          "score/(SELECT SUM(score) FROM local_concepts) AS score, " \
+          "score, " \
           "valid " \
           "FROM local_concepts " \
           "WHERE idlocal = %d;" % id
@@ -46,7 +62,7 @@ def get_all_concepts():
           "relation," \
           "first," \
           "second, " \
-          "score/(SELECT SUM(score) FROM local_concepts) AS score, " \
+          "score, " \
           "valid " \
           "FROM local_concepts " \
 
@@ -83,7 +99,7 @@ def get_word_concept(word):
           "relation," \
           "first," \
           "second, " \
-          "score/(SELECT SUM(score) FROM local_concepts) AS score, " \
+          "score, " \
           "valid " \
           "FROM local_concepts " \
           "WHERE first = %s OR second = %s "
@@ -122,7 +138,7 @@ def get_concept(word, relation):
           "relation," \
           "first," \
           "second, " \
-          "score/(SELECT SUM(score) FROM local_concepts) AS score, " \
+          "score, " \
           "valid " \
           "FROM local_concepts " \
           "WHERE (first = %s OR second = %s) AND relation = %s "
@@ -155,16 +171,17 @@ def get_concept(word, relation):
     conn.close()
     return resulting
 
+
 def get_concept_specified(first, relation, second):
     sql = "SELECT idlocal, " \
-          "userid, " \
-          "relation, " \
-          "first, " \
+          "userid," \
+          "relation," \
+          "first," \
           "second, " \
-          "score/(SELECT SUM(score) FROM local_concepts) AS score, " \
+          "score, " \
           "valid " \
-          "FROM local_concepts "\
-          "WHERE first = %s AND second = %s AND relation = %s"
+          "FROM local_concepts " \
+          "WHERE first = %s AND second = %s AND relation = %s "
 
     conn = SqlConnConcepts.get_connection()
     cursor = conn.cursor()
@@ -176,6 +193,8 @@ def get_concept_specified(first, relation, second):
         cursor.execute(sql, (first, second, relation,))
         # Fetch all the rows in a list of lists.
         row = cursor.fetchone()
+
+        
         id          = row[0]
         userid      = row[1]
         relation    = row[2]
@@ -184,7 +203,7 @@ def get_concept_specified(first, relation, second):
         score       = row[5]
         valid       = row[6]
 
-        resulting = Local_Concept(id, userid, first, relation, second, score, valid)\
+        resulting = Local_Concept(id, userid, first, relation, second, score, valid)
 
     except:
         print("Error Concept: unable to fetch data for word "+first+" and "+second)
@@ -199,7 +218,7 @@ def get_concept_like(relation, first="", second=""):
           "relation," \
           "first," \
           "second, " \
-          "score/(SELECT SUM(score) FROM local_concepts) AS score, " \
+          "score, " \
           "valid " \
           "FROM local_concepts " \
           "WHERE first LIKE '%"+first+"%' AND second LIKE '%"+second+"%' AND relation = '"+relation+"'"
@@ -213,6 +232,7 @@ def get_concept_like(relation, first="", second=""):
         cursor.execute(sql)
         # Fetch all the rows in a list of lists.
         result = cursor.fetchall()
+        print("result length", len(result))
 
         for row in result:
             id          = row[0]
@@ -262,16 +282,16 @@ def add_concept(concept):
         conn.close()
         return False
 
-def update_score(id):
+def update_score(id, score):
     sql = "UPDATE local_concepts " \
-          "SET score = score + 1 "\
+          "SET score = %s " \
           "WHERE idlocal = %s;" 
 
     conn = SqlConnConcepts.get_connection()
     cursor = conn.cursor()
 
     try:
-        cursor.execute(sql, (str(id),))
+        cursor.execute(sql, (str(score), str(id)))
         conn.commit()
         conn.close()
         return True
@@ -283,14 +303,14 @@ def update_score(id):
 
 def update_valid(id, valid):
     sql = "UPDATE local_concepts " \
-          "SET valid = %s "\
+          "SET valid = %s " \
           "WHERE idlocal = %s;" 
 
     conn = SqlConnConcepts.get_connection()
     cursor = conn.cursor()
 
     try:
-        cursor.execute(sql, (str(valid), str(id),))
+        cursor.execute(sql, (str(valid), str(id)))
         conn.commit()
         conn.close()
         return True

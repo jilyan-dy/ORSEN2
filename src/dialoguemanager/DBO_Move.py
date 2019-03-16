@@ -6,6 +6,7 @@ TYPE_GENERAL_PUMP = "general"
 TYPE_SPECIFIC_PUMP = "specific"
 TYPE_HINT = "hinting"
 TYPE_REQUESTION = ""
+TYPE_SUGGESTING = "suggesting"
 
 def get_specific_template(id):
     sql = "SELECT idtemplates, " \
@@ -76,7 +77,7 @@ def get_templates_of_type(type):
         cursor.execute(sql)
         # Fetch all the rows in a list of lists.
         result = cursor.fetchall()
-
+        
         for row in result:
 
             id          = row[0]

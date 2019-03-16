@@ -1,7 +1,14 @@
 from operator import attrgetter
+import numpy
 
 MOVE_FEEDBACK = 1
 MOVE_GENERAL_PUMP = 2
+MOVE_SPECIFIC_PUMP = 3
+MOVE_HINT = 4
+MOVE_REQUESTION = 5
+MOVE_UNKNOWN = 6
+MOVE_PROMPT = 7
+MOVE_SUGGESTING = 8
 
 class World:
 
@@ -16,9 +23,19 @@ class World:
         self.event_chain = []
 
         # RESPONSE ELEMENTS
-        self.responses = []
+        self.responses = [] #List of moves
         self.empty_response = 0
         self.general_response_count = 0
+        self.continue_suggesting = 0 #1 means yes continue to suggest. #0 means no
+        self.suggest_continue_count = 0
+        
+        #responses count
+        self.feedback_count = 0
+        self.general_pump_count = 0
+        self.specific_pump_count = 0
+        self.hint_count = 0
+        self.suggest_count = 0
+        self.prompt_count = 0
 
     def add_character(self, char):
         if char.id not in self.objects and char.id not in self.characters:
@@ -94,7 +111,51 @@ class World:
 
     def add_response(self, response):
         self.responses.append(response)
-        if response.type == MOVE_FEEDBACK or response.type == MOVE_GENERAL_PUMP:
+        if response.type_num == MOVE_FEEDBACK or response.type_num == MOVE_GENERAL_PUMP:
             self.general_response_count += 1
-        else:
+            self.suggest_continue_count = 0
+        elif response.type_num == MOVE_SUGGESTING:
+            self.suggest_continue_count +=1
             self.general_response_count = 0
+        elif response.type_num != MOVE_SUGGESTING or response.type_num != MOVE_UNKNOWN:
+            self.general_response_count = 0
+            self.suggest_continue_count = 0
+    
+    def add_response_type_count(self, response):
+        if response.type_num == MOVE_FEEDBACK:
+            self.feedback_count += 1
+        elif response.type_num == MOVE_GENERAL_PUMP:
+            self.general_pump_count += 1
+        elif response.type_num == MOVE_SPECIFIC_PUMP:
+            self.specific_pump_count += 1
+        elif response.type_num == MOVE_HINT: 
+            self.hint_count += 1
+        elif response.type_num == MOVE_SUGGESTING:
+            self.suggest_count += 1
+        elif response.type_num == MOVE_PROMPT: 
+            self.prompt_count += 1
+        
+        curr_responses = [self.feedback_count, self.general_pump_count, self.specific_pump_count, self.hint_count, self.suggest_count]
+        for i in range (len(curr_responses)):
+            print(curr_responses[i])
+        
+    def compute_weights_dialogue(self):
+        total_responses = 0
+        total_responses += self.feedback_count + self.general_pump_count + self.specific_pump_count + self.hint_count + self.suggest_count
+
+        curr_responses = [self.feedback_count, self.general_pump_count, self.specific_pump_count, self.hint_count, self.suggest_count]
+        elements = [1, 2, 3, 4, 8]
+        weights = []
+        for i in range (len(curr_responses)):
+            if curr_responses[i] == 0:
+                weights.append(0.1)
+            else:
+                weights.append(curr_responses[i]/total_responses)
+
+        print("F, GP, SP, H, S")
+        print("Weights", weights)
+
+        weights = numpy.reciprocal(weights)            
+        weights = weights / numpy.sum(weights)         
+        return numpy.random.choice(elements, p=weights) 
+        
