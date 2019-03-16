@@ -1,10 +1,12 @@
-from src.db.concepts import DBO_Concept
+from src.db.concepts import DBO_Concept, DBO_Local_Concept
+from src.objects.concepts.Local_Concept import Local_Concept
 from src.objects.eventchain.EventFrame import EventFrame, FRAME_DESCRIPTIVE, FRAME_EVENT, FRAME_CREATION
 from src.objects.nlp.Sentence import Sentence
 from src.objects.storyworld.Attribute import Attribute
 from src.objects.storyworld.Character import Character
 from src.objects.storyworld.Object import Object
 from src.objects.storyworld.Setting import Setting
+from src.inputprocessor import DBO_Relation, Relation
 from neuralcoref import Coref
 import _operator
 
@@ -37,8 +39,6 @@ def pos_ner_nc_processing(sentence):
 		for child in token.children:
 			new_sentence.children[len(new_sentence.children) - 1].append(child)
 
-		# print("------POS------")
-		# print("text_token: " + token.text, "pos: " + token.pos_, "dep: " + token.dep_, "head_text: " + token.head.text)
 	for ent in sentence.ents:
 		new_sentence.text_ent.append(ent.text)
 		new_sentence.label.append(ent.label_)
@@ -47,26 +47,23 @@ def pos_ner_nc_processing(sentence):
 		new_sentence.text_chunk.append(chunk.text)
 		new_sentence.dep_root.append(chunk.root.dep_)
 		new_sentence.dep_root_head.append(chunk.root.head.text)
-		#   print("------NC------")
-		# print("text_chunk: " + chunk.text, "dep_root: " + chunk.root.dep_, "dep_root_head: " + chunk.root.head.text)
 
 	print("This is the output for pos_ner_nc_processing: ")
 	print("input/new_sentence.words: " + str(new_sentence.words))
-	print("------------------------------------------------------")
+	print("children:	")
 	print(new_sentence.children)
-	print("------------------------------------------------------")
+	print("text_token:	")
 	print(new_sentence.text_token)
-	print("------------------------------------------------------")
+	print("head_text:	")
 	print(new_sentence.head_text)
-	print("------------------------------------------------------")
+	print("lemma:		")
 	print(new_sentence.lemma)
-	print("------------------------------------------------------")
+	print("pos:			")
 	print(new_sentence.pos)
-	print("------------------------------------------------------")
+	print("tag:			")
 	print(new_sentence.tag)
-	print("------------------------------------------------------")
+	print("dep:			")
 	print(new_sentence.dep)
-	print("------------------------------------------------------")
 
 	return new_sentence
 
@@ -86,7 +83,7 @@ def find_text_index(sent, child):
 
 # checks if the list of entities extracted from spacy (sent) contains the word (ent)
 def find_ent_index(sent, ent):
-	print("hello this is find_ent_index")
+	print("ENTER find_ent_index")
 	ent = ent.lower()
 	for k in range(0, len(sent.text_ent)):
 		if ent in str(sent.text_ent[k]).lower():
@@ -263,19 +260,20 @@ def details_extraction(sent, world, current_node, subj="", neg="", text=""):
 	else:
 		print("ERROR: Cannot find current index or node ", current_node, " has been recorded")
 
+# This is made by Jilyan
 def compound_extraction(sent, subj):
 	num = -1
 	subj = subj.lower()
 	temp = subj.split()
-	print("This is the input of compound_extraction: " + subj)
+	print("ENTER compound_extraction: ")
 
 	# if there is no given word to check
 	if not temp:
 		return ""
 
 	# find index of given word
-	for k in range(len(sent.text_token)):
-		if temp[-1] == sent.text_token[k].lower():
+	for k in range(len(sent.lemma)):
+		if temp[-1] == sent.lemma[k].lower():
 			num = k
 			break
 	
@@ -284,17 +282,19 @@ def compound_extraction(sent, subj):
 		while sent.dep[num] == 'compound':
 			num += 1
 		
-		subj = sent.text_token[num]
+		# set last of compund word to string
+		subj = sent.lemma[num]
 
+		# insert remaining compound word in front of string
 		for k in range(num - 1, -1, -1):
 			if sent.dep[k] == "compound":
-				subj = str(sent.text_token[k]).lower() + " " + subj
+				subj = str(sent.lemma[k]).lower() + " " + subj
 			else:
 				break
-	print("This is the output of compound_extraction: " + subj)
+
 	return subj
 
-
+# commented this one out because it was unable to completely get the whole compound nound
 # def compound_extraction(sent, subj):
 # 	num = 0
 # 	subj = str(subj).lower()
@@ -325,7 +325,7 @@ def compound_extraction(sent, subj):
 
 
 def char_conj_extractions(sent, subj):
-	print("ENTERED")
+	print("ENTERED char_conj_extractions")
 	subj = str(subj).lower()
 	list_of_conj = [subj]
 	temp = str(subj).split()
@@ -361,17 +361,14 @@ def add_capability(sent, attr, subject, world, num, i=""):
 
 	for j in range(0, len(sent.words)):
 		if sent.dep[j] in ['conj'] and (sent.head_text[j] == str(head)):
-			print("ENTEREDDDDD")
 			if find_neg_attr(sent, j):
 				new_attribute = Attribute(DBO_Concept.CAPABLE_OF, sent.text_token[j].lower(), True)
-				print("ADDEDDDDD")
 			else:
 				new_attribute = Attribute(DBO_Concept.CAPABLE_OF, sent.text_token[j].lower(), False)
 			list_of_capabilities.append(new_attribute)
 			head = sent.text_token[j].lower()
 
 	for cap in list_of_capabilities:
-		print("HERE", cap.name)
 		if cap.name not in ["is", "was", "are", "be", "am", "are", "were", "been", "being"]:
 			for c in list_of_char:
 				c = str(c).lower()
@@ -481,9 +478,7 @@ def check_duplicate_attribute(obj_attributes, attribute):
 def find_neg_attr(sent, int):
 	for i in range(0, len(sent.children[int])):
 		j = find_text_index(sent, str(sent.children[int][i]))
-		print("WORD", sent.text_token[j])
 		if sent.dep[j] == "neg":
-			print("YEY")
 			return True
 
 	return False
@@ -501,7 +496,6 @@ def add_attributes(sent, child, subject, world, negation="", relation=""):
 	for i in range(0, len(sent.words)):
 		if (sent.dep[i] == 'conj') and (sent.head_text[i] == str(head)):
 			if find_neg_attr(sent, i):
-				print("WHATTT", sent.text_token[i].lower())
 				new_attribute = Attribute(relation, sent.text_token[i].lower(), True)
 
 			else:
@@ -629,6 +623,8 @@ def getCategory(sentence):
 
 
 def coref_resolution(s, sent_curr, sent_bef, world, isFirst):
+	print("ENTERED coref_resolution")
+
 	prn = []
 	noun = []
 	curr = sent_curr
@@ -651,31 +647,42 @@ def coref_resolution(s, sent_curr, sent_bef, world, isFirst):
 	for x in range(0, num_prn):
 		if num_conj >= 1:
 			sent = coref.continuous_coref(utterances=sent_curr)
+			print("after coref.continuous_coref")
+			print(sent)
 			num_conj -= 1
 		elif isFirst is False:
 			sent = coref.one_shot_coref(utterances=sent_curr, context=sent_bef)
+			print("coref.one_shot_coref")
+			print(sent)
 
 		mentions = coref.get_mentions()
-		# print("mentions", mentions)
+		print("mentions")
+		print(mentions)
 
 		rep = coref.get_most_representative()
 		scores = coref.get_scores()
 		propn_count = 0
 		noun_count = 0
 
+		print("rep")
+		print(rep)
+		print("scores")
+		print(scores)
+
 		for i in range(0, len(s.text_token)):
-			# print(s.tag)
 			if s.pos[i] == 'PROPN':
 				propn_count += 1
 			if s.tag[i] == 'NN':
 				noun_count += 1
 
-		# print("noun", noun_count)
 		if propn_count < 1:
 			if noun_count < 1 and isFirst is True:
+				print("propn 0 noun 0 first")
+				print(sent_curr)
 				return sent_curr
 
 		if len(rep) > 0 and len(scores) > 0:
+			print("if rep and scores not 0")
 			count = 0
 
 			add_apos = []
@@ -688,7 +695,11 @@ def coref_resolution(s, sent_curr, sent_bef, world, isFirst):
 			for key, value in rep.items():
 				for i in range(0, len(add_apos)):
 					if add_apos[i] == c:
+						print("sent_curr before")
+						print(sent_curr)
 						sent_curr = sent_curr.replace(str(key), str(value) + "'s")
+						print("sent_curr after")
+						print(sent_curr)
 
 			c += 1
 			hold_key = " " + str(key) + " "
@@ -762,8 +773,7 @@ def coref_resolution(s, sent_curr, sent_bef, world, isFirst):
 		#    sent_curr = sent_curr.replace(str(prn[i]), str(noun[i]))
 
 		else:
-			print("OWN CODE")
-			print(s.text_token)
+			print("if rep and scores is 0 or less")
 			isThis = ""
 			changeThis = ""
 			for i in range(0, len(s.text_token)):
@@ -783,6 +793,7 @@ def coref_resolution(s, sent_curr, sent_bef, world, isFirst):
 							changeThis = s.text_token[j]
 
 				if len(isThis) > 0 and len(changeThis) > 0:
+					print("if isThis and changeThis has content")
 					if changeThis.lower() == 'her' or changeThis.lower() == 'his' or changeThis.lower() == 'our':
 						isThis = isThis + "'s"
 
@@ -791,6 +802,8 @@ def coref_resolution(s, sent_curr, sent_bef, world, isFirst):
 						if split[i] == changeThis:
 							split[i] = isThis
 					sent_curr = " ".join(split)
+					print(sent_curr)
+	print("leavinggg bye bye")
 
 	return sent_curr
 
@@ -920,10 +933,12 @@ def event_extraction(sentence, world, current_node):
 				# Compound Subj
 				if sentence.dep[i - 1] == 'compound' and comp_c > 0 and sentence.dep[i] == 'nsubj':
 					# print("Compound and not poss")
-					if sentence.text_token[i - 1] != sentence.text_token[i]:
-						c_char = sentence.text_token[i - 1] + " " + sentence.head_text[i - 1]
-					else:
-						c_char = sentence.head_text[i - 1]
+					# if sentence.text_token[i - 1] != sentence.text_token[i]:
+					# 	c_char = sentence.text_token[i - 1] + " " + sentence.head_text[i - 1]
+					# else:
+					# 	c_char = sentence.head_text[i - 1]
+					# done by Jilyan
+					c_char = compound_extraction(sentence ,sentence.text_token[i])
 
 					event_subj.append(c_char)
 					if (i + 1) < len(sentence.dep):
@@ -934,7 +949,6 @@ def event_extraction(sentence, world, current_node):
 										event_subj[len(event_subj) - 1] += ',' + sentence.text_token[i + k]
 										if sentence.dep[i + k + 1] != 'cc' or sentence.dep[i + k + 1] != 'punct':
 											k = len(sentence.dep)
-					print("Added Char: ", c_char)
 					comp_c -= 1
 					nsubj_c -= 1
 					if nsubj_c == 0:
@@ -947,7 +961,6 @@ def event_extraction(sentence, world, current_node):
 						p_char = sentence.text_token[i - 2] + sentence.text_token[i - 1] + " " + sentence.text_token[i]
 
 						event_subj.append(p_char)
-						print("Added Char: ", p_char)
 						poss_c -= 1
 						nsubj_c -= 1
 
@@ -960,7 +973,6 @@ def event_extraction(sentence, world, current_node):
 						i - 1] + " " + sentence.text_token[i]
 
 					event_subj.append(cp_char)
-					print("Added Char: ", cp_char)
 					poss_c -= 1
 					comp_c -= 1
 					nsubj_c -= 1
@@ -992,7 +1004,6 @@ def event_extraction(sentence, world, current_node):
 										isFound_char = True
 			if nsubj_c > 0 and isFound_char is False:
 				event_subj.append(sentence.text_token[i])
-				print("Added Char: ", sentence.text_token[i])
 				nsubj_c -= 1
 				if nsubj_c == 0:
 					isFound_char = True
@@ -1636,14 +1647,12 @@ def event_extraction(sentence, world, current_node):
 				if head_hold == event_prep[z] and event_pobj[z] == '-':
 					event_pobj[z] = sentence.text_token[i]
 					break
-					break
 
 			index = 0
 			if sentence.head_text[i] == 'by':
 				for x in range(0, len(sentence.text_token)):
 					if sentence.text_token[x] == 'by':
 						index = x
-						break
 						break
 				for z in range(0, len(event_prep)):
 					if sentence.head_text[index] == event_subj_act[z]:
@@ -1657,7 +1666,6 @@ def event_extraction(sentence, world, current_node):
 									if sentence.dep[y] == 'conj' and sentence.head_text[y] == test_pchar:
 										test_pchar = sentence.text_token[y]
 										event_subj[z] += "," + test_pchar
-						break
 						break
 
 		# ----END OF OBJECT EXTRACTION----#
@@ -1736,6 +1744,7 @@ def event_extraction(sentence, world, current_node):
 						else:
 							event_detail[x] = sentence.text_token[i]
 						advmod_c -= 1
+
 		# ----END OF OBJECT ACTION EXTRACTION----#
 		# ----START OF SPECIAL CASES----#
 
@@ -2042,3 +2051,176 @@ def add_event(type, subj, subj_act, prep, pobj, detail, dobj, attr, iobj, create
 				world.add_eventframe(new_eventframe)
 
 	print(world.event_chain)
+
+# check for unkown word one by one
+def find_unkown_word(sent):
+	print("ENTER find_unkown_word")
+	
+	for i in range(len(sent.lemma)):
+		if str(sent.pos[i]).lower() == "noun" or str(sent.pos[i]).lower() == "propn":
+			# check if word exists in global knowledge base
+			if DBO_Concept.get_word_concept(sent.lemma[i]) == []:
+				print("Found this for global: " + sent.lemma[i])
+				# check if word exists in local knowledge base
+				if DBO_Local_Concept.get_word_concept(sent.lemma[i]) == []:
+					print("Found this for local: " + sent.lemma[i])
+					return sent.lemma[i]
+
+	print("Found None")
+	return None
+
+# extract all possible relations from input based on templates
+def extract_relation(sent):
+	print("ENTER extract_relation function")
+
+	first_word = ""
+	second_word = ""
+	first_index = 0
+	second_index = -1
+	keywords = None
+	string = ""
+	extracted = []
+	start = 0
+	flag = True
+
+	# get all relation templates from DB
+	rel_templates = DBO_Relation.get_all_relations_templates()
+
+	# in case sentence contains multiple relations
+	while start >= 0 and first_index == 0 and start < len(sent.pos) - 1:
+		first_index = -1
+		first_word = ""
+		second_word = ""
+		# find the first noun. Because all templates starts with noun
+		for i in range(start, len(sent.pos)):
+			if str(sent.pos[i]).lower() == "noun" or str(sent.pos[i]).lower() == "pron" or str(sent.pos[i]).lower() == "propn":
+				first_index = i
+				first_word = compound_extraction(sent, sent.lemma[first_index])
+				if sent.lemma[first_index] not in first_word:
+					first_word = sent.lemma[first_index]
+				break
+				
+		# if there is a noun in the sentence
+		if first_index != -1 and first_index < len(sent.pos) - 1:
+			print("I found this as noun " + sent.text_token[first_index])
+			string = ""
+			
+			# concat lemma version of input
+			# lemma means base words
+			for i in sent.lemma:
+				string = string + " " + i
+
+			# check all possible templates if it fits
+			for i in range(len(rel_templates)):
+				flag = True
+				# for instances like "Jim jumped"
+				if rel_templates[i].keywords == "":
+					# if keywords is empty
+					if str(sent.pos[first_index+1]).lower() == rel_templates[i].second and sent.lemma[first_index+1] != "be":
+						# if pos of second matches with second of template
+						second_index = first_index+1
+						second_word = compound_extraction(sent, sent.lemma[second_index])
+						if sent.lemma[second_index] in second_word:
+							extracted.append(Relation.Relation(rel_templates[i].id, rel_templates[i].relation, first_word, rel_templates[i].keywords, second_word))
+							print("appended: " + extracted[len(extracted)-1].__str__())
+						else:
+							extracted.append(Relation.Relation(rel_templates[i].id, rel_templates[i].relation, first_word, rel_templates[i].keywords, sent.lemma[second_index]))
+							print("appended: " + extracted[len(extracted)-1].__str__())
+
+				elif rel_templates[i].keywords in string:
+					# if a template that is not empty fits split the keywords of the specific template
+					keywords = rel_templates[i].keywords.split()
+					for x in range(len(keywords)):
+						if sent.lemma[first_index+1+x] != keywords[x]:
+							flag = False
+							break
+					if flag:
+						# if the keywords can be found immediatly after the noun found second will take position of the word right after keywords
+						second_index = first_index + len(keywords) + 1
+						if str(sent.pos[second_index]).lower() == rel_templates[i].second:
+							# if the pos tag of the second words matches the template take the words as a relation
+							second_word = compound_extraction(sent, sent.lemma[second_index])
+							if sent.lemma[second_index] in second_word:
+								extracted.append(Relation.Relation(rel_templates[i].id, rel_templates[i].relation, first_word, rel_templates[i].keywords, second_word))
+								print("appended: " + extracted[len(extracted)-1].__str__())
+							else:
+								extracted.append(Relation.Relation(rel_templates[i].id, rel_templates[i].relation, first_word, rel_templates[i].keywords, sent.lemma[second_index]))
+								print("appended: " + extracted[len(extracted)-1].__str__())
+						else :
+							# if pos tag does not match revert second_index to -1
+							second_index = -1
+					else:
+						# if keywords not found immediatly after noun disregard
+						keywords = None
+
+			if second_index != -1 and second_index < len(sent.pos)-1:
+				# check in case of conjunction ex. "Penny can sing and dance"
+				if str(sent.text_token[second_index+1]).lower() == "and" and sent.pos[second_index] == sent.pos[second_index+2]:
+					second_word = compound_extraction(sent, sent.lemma[second_index+2])
+					if sent.lemma[second_index] in second_word:
+						extracted.append(Relation.Relation(rel_templates[i].id, rel_templates[i].relation, first_word, rel_templates[i].keywords, second_word))
+						print("appended: " + extracted[len(extracted)-1].__str__())
+					else:
+						extracted.append(Relation.Relation(rel_templates[i].id, rel_templates[i].relation, first_word, rel_templates[i].keywords, sent.lemma[second_index+2]))
+						print("appended: " + extracted[len(extracted)-1].__str__())
+			
+			# check if there was a noun found
+			if first_index != -1:
+				start = first_index + 1
+				first_index = 0
+				second_index = 0
+				first_word = ""
+				second_word = ""
+
+			else:
+				start = -1
+
+	return extracted
+
+# filter relations that do not exist in global knowledge base
+def remove_existing_relations_global(extracted):
+	result = []
+
+	for i in range(len(extracted)):
+		if DBO_Concept.get_concept_specified(extracted[i].first, extracted[i].relation, extracted[i].second) == None:
+			result.append(extracted[i])
+
+	# print left in extracted list
+	print("What's left after removing existing global relations")
+	for i in result:
+		print(i.__str__())
+
+	return result
+
+# filter relations that do not exist in local knowledge base
+def remove_existing_relations_local(userid, extracted):
+	print("ENTER remove_existing_relations_local")
+	result = []
+	temp = None
+
+	for i in range(len(extracted)):
+		temp = DBO_Local_Concept.get_concept_specified(extracted[i].first, extracted[i].relation, extracted[i].second)
+		# if concept does not exists in local append to list to be returned
+		if temp == None:
+			result.append(extracted[i])
+		# else update it's score
+		else:
+			# if temp.userid != userid:
+			DBO_Local_Concept.update_score(temp.id) # JILYAN, YOU HAVE TO CHANGE THIS
+
+		temp = None
+
+	# print left in extracted list
+	print("What's left after removing existing local relations")
+	for i in result:
+		print(i.__str__())
+
+	return result
+
+# add new relations to local knowledge base
+def add_relations_to_local(userid, extracted):
+	print("ENTER add_relations_to_local")
+	temp = None
+	for i in range(len(extracted)):
+		temp = Local_Concept(0, userid, extracted[i].first, extracted[i].relation, extracted[i].second, 0, 1)
+		DBO_Local_Concept.add_concept(temp)

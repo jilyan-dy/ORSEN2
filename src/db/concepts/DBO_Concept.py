@@ -111,7 +111,7 @@ def get_word_concept(word):
             first       = row[2]
             second      = row[3]
 
-        resulting.append(Concept(id, first, relation, second))
+            resulting.append(Concept(id, first, relation, second))
 
     except:
         print("Error Concept: unable to fetch data for word "+word)
@@ -171,7 +171,7 @@ def get_concept_specified(first, relation, second):
         # Execute the SQL command
         cursor.execute(sql, (first, second, relation,))
         # Fetch all the rows in a list of lists.
-        result = cursor.fetchone()
+        result = cursor.fetchall()
 
         if result != None:
             id          = result[0]
