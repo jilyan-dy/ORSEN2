@@ -12,6 +12,9 @@ class Move:
         self.concept_id = concept_id #ID of which concept was used
         self.dbtype = dbtype #local or global?
 
+        self.blank_dictionary_move = {}    
+        self.concept_letter = "Z"   
+
     def fill_blank(self, fill):
         for i in range(0, len(fill)):
             self.template[self.blank_index[i]] = fill[i]

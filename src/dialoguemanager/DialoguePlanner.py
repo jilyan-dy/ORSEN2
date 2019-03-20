@@ -2,6 +2,7 @@ from numpy import random
 from src.objects.ServerInstance import ServerInstance
 from src.inputprocessor.infoextraction import getCategory, CAT_STORY, CAT_COMMAND, CAT_ANSWER
 from src.dialoguemanager import DBO_Move, Move
+from src.dialoguemanager import Follow_Up, DBO_Follow_Up
 from src.db.concepts import DBO_Concept, DBO_Local_Concept
 from src.objects.concepts.Concept import Concept
 from src.objects.eventchain.EventFrame import EventFrame, FRAME_EVENT, FRAME_DESCRIPTIVE
@@ -45,8 +46,6 @@ CONVERT_3PASG = "3sgp"
 CONVERT_PAPL = "ppl"
 CONVERT_PAPART = "ppart"
 
-#DATABASE_TYPE
-
 server = ServerInstance()
 
 def retrieve_output(coreferenced_text, world_id):
@@ -57,6 +56,8 @@ def retrieve_output(coreferenced_text, world_id):
         last_response_type_num = -1
     output = ""
     choice = -1
+
+    print("LLLLASST", last_response_type_num)
 
     if len(world.event_chain) <=  1 and ("my name is" in coreferenced_text or
             (("hello" in coreferenced_text or "hi" in coreferenced_text)
@@ -94,8 +95,21 @@ def retrieve_output(coreferenced_text, world_id):
         world.empty_response = 0
         category = getCategory(coreferenced_text)
 
-        if category == CAT_STORY:
-            print(len(world.event_chain))
+        if len(world.responses) >= 3:
+            if (last_response_type_num == MOVE_UNKNOWN and world.responses[len(world.responses)-3].type_num == MOVE_SUGGESTING):
+                if coreferenced_text == world.responses[len(world.responses)-1].concept_letter:
+                    concept_id = world.responses[len(world.responses)-1].concept_id
+                    local_concept = DBO_Local_Concept.get_concept_by_id(concept_id)
+                    new_score = local_concept.score - 1.0     #Minus the score
+                    DBO_Local_Concept.update_score(concept_id, new_score) #Update the score
+
+                category = -1    
+        
+        if category == -1:
+            output = suggest_again(world, coreferenced_text)
+
+        elif category == CAT_STORY:
+            print("world", len(world.event_chain))
             if len(world.event_chain) <= STORY_THRESHOLD:
                 print("<< STILL IN GENERALIZED THRESHOLD >>")
                 choice = random.randint(MOVE_FEEDBACK, MOVE_GENERAL_PUMP+1)
@@ -104,7 +118,16 @@ def retrieve_output(coreferenced_text, world_id):
                 choice = random.randint(MOVE_SPECIFIC_PUMP, MOVE_SPECIFIC_PUMP+1)
             else:
                 #choice = random.randint(MOVE_FEEDBACK, MOVE_SPECIFIC_PUMP+1)
+
+                #WEIGHTED RANDOMIZER
                 choice = world.compute_weights_dialogue()
+                
+                # Make sure that the same dialogue move would not be chosen for 4 times in a row
+                if len(world.responses) >= 3:
+                    while choice == world.responses[len(world.responses)-3].type_num and \
+                          choice == world.responses[len(world.responses)-2].type_num and \
+                          choice == world.responses[len(world.responses)-1].type_num:
+                        choice = world.compute_weights_dialogue()
 
             output = generate_response(choice, world, [], coreferenced_text)
 
@@ -136,21 +159,50 @@ def retrieve_output(coreferenced_text, world_id):
                 elif "no" in coreferenced_text:
                     output = Move.Move(template=["Why not? Don't you like it or do you think it's wrong?"], type_num=MOVE_UNKNOWN)
                     world.continue_suggesting = 1
-                
+                    world.suggest_continue_count += 1
+
+                    prev_response = world.responses[len(world.responses)-1]
+                    output.move_id = prev_response.move_id
+                    output.concept_id = prev_response.concept_id
+                    output.blank_dictionary_move = prev_response.blank_dictionary_move
+
+                    print("Move 1", output.move_id)
+                    print("CON 1", output.concept_id)
+               
                 else:
-                    output = Move.Move(template=["Sorry, I don't understand. Please answer by yes or no"], type_num=MOVE_SUGGESTING)
+                    output = Move.Move(template=["Sorry, I don't understand. Please answer by yes or no"], type_num=MOVE_UNKNOWN)
 
             elif last_response_type_num == MOVE_UNKNOWN and world.continue_suggesting == 1:  
-                if "don't like" in sentence or "dont like" in sentence:
-                    choice = MOVE_SUGGESTING
-                    output = generate_response(choice, world, [], coreferenced_text)
 
-                elif "wrong" in sentence:
+                if "don't like" in coreferenced_text or "dont like" in coreferenced_text:
+                    # Suggest again?
+                    output = suggest_again(world, coreferenced_text)
+
+                elif "wrong" in coreferenced_text:
+                    # Output using the hardcoded templates. Move should be MOVE_ANSWER
+                    # If there is only one no need for multiple choice
+                    # If there is more then need to loop it. USE OTHER PYTHON FILE PLEASE
                     print("NOT YET DONE")
-                
-                if world.suggest_continue_count == 3:
-                    choice = MOVE_SPECIFIC_PUMP
-                    output = generate_response(choice, world, [], coreferenced_text)
+                    prev_response = world.responses[len(world.responses)-1]
+
+                    #Follow Up Functions
+                    temp_response = get_follow_up_string(prev_response)
+
+                    if temp_response == None:
+                        # MINUS
+                        #Get the entire local concept
+                        local_concept = DBO_Local_Concept.get_concept_by_id(prev_response.concept_id)
+                        new_score = local_concept.score - 1.0     #Minus the score
+                        DBO_Local_Concept.update_score(prev_response.concept_id, new_score) #Update the score
+
+                        output = suggest_again(world, coreferenced_text)
+                        print("REMOVE COMMENT (SUGGEST AGAIN)")
+                    else:
+                        output = Move.Move(template=["Which one is wrong? " + temp_response.get_string_template()], type_num=MOVE_UNKNOWN)                                       
+                        output.move_id = prev_response.move_id
+                        output.concept_id = prev_response.concept_id
+                        output.blank_dictionary_move = prev_response.blank_dictionary_move
+                        output.concept_letter = temp_response.concept_letter
 
             else:
                 choice = random.randint(MOVE_FEEDBACK, MOVE_HINT+1)
@@ -195,6 +247,9 @@ def retrieve_output(coreferenced_text, world_id):
         else:
             output = Move.Move(template=["I don't know what to say."], type_num=MOVE_UNKNOWN)
     
+    # AFTER GETTING THE TEMPLATE
+
+    #Check if the move is suggesting, then change the variable
     if output.type_num == MOVE_SUGGESTING:
         world.continue_suggesting = 1
     elif output.type_num != MOVE_UNKNOWN:
@@ -202,6 +257,13 @@ def retrieve_output(coreferenced_text, world_id):
 
     world.add_response(output)
     world.add_response_type_count(output)
+
+    #Header would be added
+    feedback_add = feedback_random(output.type_num)
+    if feedback_add == 1 and category == CAT_STORY:
+        feedback_output = generate_response(MOVE_FEEDBACK, world, [], coreferenced_text)
+        combination_response(output.type_num, world)
+        output.template.insert(0, feedback_output.get_string_response() + " ")
 
     return output
 
@@ -212,8 +274,10 @@ def generate_response(move_code, world, remove_index, text):
     DATABASE_TYPE = DBO_Concept
     if move_code == MOVE_SUGGESTING:
         DATABASE_TYPE = DBO_Local_Concept
+        db_type = "local"
     else:
         DATABASE_TYPE = DBO_Concept
+        db_type = "global"
 
     print(DATABASE_TYPE)
 
@@ -291,13 +355,11 @@ def generate_response(move_code, world, remove_index, text):
         # Check if the template has already been use through move.move_id
         # Dapat hindi siya yun last na use. Dapat hindi siya nasa remove_index
         if move.move_id != last_response_id and move.move_id not in remove_index:
-            print("NANDITO AKO")
             move.type_num = move_code
             break
 
         print(index_loop)
         if index_loop > 20:
-            print("AM I HERE?????")
             remove_index.append(move.move_id)
             return generate_response(MOVE_FEEDBACK, world, remove_index, text)
 
@@ -305,7 +367,8 @@ def generate_response(move_code, world, remove_index, text):
     print(str(move))
 
     for blank_type in move.blanks:
-
+        subject = None # IDK????
+        
         has_a_specified_concept = ":" in blank_type
 
         if has_a_specified_concept:
@@ -354,7 +417,7 @@ def generate_response(move_code, world, remove_index, text):
                     concept_string = usable_concepts[concept_index].second
 
                 move.template[move.template.index(to_replace)] = concept_string #from the templates, look for the index of the to_replace
-
+                move.blank_dictionary_move[to_replace] = concept_string                
         elif blank_type in DATABASE_TYPE.RELATIONS:
 
             # CHOOSE THE CONCEPT
@@ -362,13 +425,10 @@ def generate_response(move_code, world, remove_index, text):
             decided_node = -1
 
             loop_total = 0
-
             if subject is None:
-
                 charas = world.get_top_characters()
                 objects = world.get_top_objects()
                 list_choices = charas + objects
-
                 while True:
                     if len(list_choices) > 0:
                         loop_total += 1
@@ -379,12 +439,10 @@ def generate_response(move_code, world, remove_index, text):
                         break
 
                     subject = decided_item
-                    print("CELINA - SUBJECT: - " + str(subject))
                     print(type(subject))
                     print(subject.type)
 
                     if len(subject.type) > 0:
-                        print("HOPIA")
                         decided_concept = subject.name[random.randint(0, len(subject.type))]
                         decided_node = NODE_START
                     else:
@@ -410,9 +468,6 @@ def generate_response(move_code, world, remove_index, text):
                             elif blank_type == DATABASE_TYPE.IS_A or blank_type == DATABASE_TYPE.PART_OF or DATABASE_TYPE.USED_FOR:
                                 found_attr = DATABASE_TYPE.IS_A
                                 decided_node = NODE_START
-                            
-                            elif blank_type == DATABASE_TYPE.CAPABLE_OF:
-                                print("HI LANG")
                                 
                             for item in decided_item.attributes:
                                 if item.relation == found_attr and not item.isNegated:
@@ -455,30 +510,54 @@ def generate_response(move_code, world, remove_index, text):
             #If there is none found, change template.
             if len(usable_concepts) == 0:
                 remove_index.append(move.move_id)
-                print("Hi friends")
                 print(loop_total)
                 return generate_response(move_code, world, remove_index, text)
 
             while len(usable_concepts) == 0:
                 loop_total += 1
-                print("Hi friends 2")
                 print(loop_total)
                 usable_concepts = DATABASE_TYPE.get_concept_like(blank_type)
                 if loop_total > 10:
-                    print("Hi friends 3")
                     break
                     
             print("DECIDED CONCEPT: "+decided_concept)
             print(str(usable_concepts))
+            remove_concept = []
             if len(usable_concepts) > 0:
+                # Use loops, If from local, check first the user here, and if valid - Celina
+                # Also check if the concept was already use here, use loops
                 concept_index = random.randint(0,len(usable_concepts))
                 concept = usable_concepts[concept_index]
+
+                dbtype_concept_list = get_dbtype_concept_list(DATABASE_TYPE, world)
+
+                #Make sure the same concept is not used again for this world.
+                while concept.id in dbtype_concept_list:
+                    print("HHHHH")
+                    usable_concepts.remove(concept)
+
+                    if len(usable_concepts) == 0:
+                        remove_index.append(move.move_id)
+                        return generate_response(move_code, world, remove_index, text)
+
+                    concept_index = random.randint(0,len(usable_concepts))
+                    concept = usable_concepts[concept_index]
+                    print("USABLE CON2", len(usable_concepts))
+
                 move.template[move.template.index("start")] = concept.first
                 move.template[move.template.index("end")] = concept.second
+
+                move.blank_dictionary_move["start"] = concept.first
+                move.blank_dictionary_move["end"] = concept.second
                 
                 # Get the concept id, this is for adding the score
                 move.concept_id = concept.id
-                print("CELINNA HHHIII") #REMOVE PRINT
+
+                if DATABASE_TYPE == DBO_Concept:
+                    world.global_concept_list.append(concept.id)
+                elif DATABASE_TYPE == DBO_Local_Concept:
+                    world.local_concept_list.append(concept.id)
+
                 print(move.concept_id)
             else:
                 print("ERROR: NO USABLE CONCEPTS decided:",decided_concept)
@@ -496,6 +575,7 @@ def generate_response(move_code, world, remove_index, text):
                 subject = list_choices[choice_index]
 
             move.template[move.template.index("object")] = subject.id
+            move.blank_dictionary_move["object"] = subject.id
 
         elif blank_type == "Item":
 
@@ -510,6 +590,7 @@ def generate_response(move_code, world, remove_index, text):
                     return generate_response(move_code, world, remove_index, text)
 
             move.template[move.template.index("item")] = subject.id
+            move.blank_dictionary_move["item"] = subject.id
 
         elif blank_type == "Character":
             if subject is None or not isinstance(subject, Character):
@@ -525,6 +606,7 @@ def generate_response(move_code, world, remove_index, text):
                 chara = subject
 
             move.template[move.template.index("character")] = subject.id
+            move.blank_dictionary_move["character"] = subject.id
 
         elif blank_type == "inSetting":
             if subject is None:
@@ -535,11 +617,14 @@ def generate_response(move_code, world, remove_index, text):
                 return generate_response(move_code, world, remove_index, text)
             else:
                 move.template[move.template.index("inSetting")] = subject.inSetting['LOC']
+                move.blank_dictionary_move["inSetting"] = subject.inSetting['LOC']
 
         elif blank_type == "Repeat":
 
             if len(world.event_chain) > 0:
                 move.template[move.template.index("repeat")]\
+                    = to_sentence_string(world.event_chain[len(world.event_chain)-1])
+                move.blank_dictionary_move["repeat"]\
                     = to_sentence_string(world.event_chain[len(world.event_chain)-1])
             else:
                 remove_index.append(move.move_id)
@@ -548,17 +633,23 @@ def generate_response(move_code, world, remove_index, text):
         elif blank_type == "Pronoun":
             if subject is None:
                 move.template[move.template.index("pronoun")] = "it"
+                move.blank_dictionary_move["pronoun"] = "it"
             else:
                 if isinstance(subject, Object):
                     move.template[move.template.index("pronoun")] = "they"
+                    move.blank_dictionary_move["pronoun"] = "they"
                 elif subject.gender == "":
                     move.template[move.template.index("pronoun")] = "they"
+                    move.blank_dictionary_move["pronoun"] = "they"
                 elif subject.gender == "M":
                     move.template[move.template.index("pronoun")] = "he"
+                    move.blank_dictionary_move["pronoun"] = "he"
                 elif subject.gender == "F":
                     move.template[move.template.index("pronoun")] = "she"
+                    move.blank_dictionary_move["pronoun"] = "she"
                 else:
                     move.template[move.template.index("pronoun")] = subject.name
+                    move.blank_dictionary_move["pronoun"] = subject.name
 
         elif blank_type == "Event":
             loop_back = len(world.event_chain)-1
@@ -570,8 +661,10 @@ def generate_response(move_code, world, remove_index, text):
                     if event.action != "":
                         if "eventverb" in move.template:
                             move.template[move.template.index("eventverb")] = event.action
+                            move.blank_dictionary_move["eventverb"] = event.action
                         if "object" in move.template:
                             move.template[move.template.index("object")] = get_subject_string(event)
+                            move.blank_dictionary_move["object"] = get_subject_string(event)
 
                 loop_back -= 1
                 loops += 1
@@ -580,12 +673,68 @@ def generate_response(move_code, world, remove_index, text):
                 remove_index.append(move.move_id)
                 return generate_response(move_code, world, remove_index, text)
         
-    if move_code == MOVE_SUGGESTING:
-        move.template.insert(0, "What if ")
-        move.template.append("?")
+    header_text(move_code, move)
 
     print("FINAL MOVE DECISION:")
     print(str(move))
     move.subject = subject
     return move
 
+def feedback_random(type_num):
+    if type_num == MOVE_GENERAL_PUMP or type_num == MOVE_SPECIFIC_PUMP or type_num == MOVE_HINT or type_num == MOVE_SUGGESTING:
+        return random.randint(0,2)
+    else:
+        return -1
+
+def combination_response(type_num, world):
+    type = -1
+    if type_num == MOVE_GENERAL_PUMP:
+        type = 9        
+    elif type_num == MOVE_SPECIFIC_PUMP:
+        type = 10
+    elif type_num == MOVE_HINT: 
+        type = 11
+    elif type_num == MOVE_SUGGESTING:
+        type = 12
+
+    world.add_combination_response_type_count(type)
+
+def header_text(move_code, move):
+    if move_code == MOVE_SUGGESTING:
+        move.template.insert(0, "What if ")
+        move.template.append("?")
+    
+    elif move_code == MOVE_HINT:
+        elements = ["Then ", "I think ", "Hmm, I think "]
+        header = random.choice(elements) 
+        move.template.insert(0, header)
+
+def get_dbtype_concept_list(DATABASE_TYPE, world):
+    if DATABASE_TYPE == DBO_Concept:
+        return world.global_concept_list
+    elif DATABASE_TYPE == DBO_Local_Concept:
+        return world.local_concept_list
+
+def get_follow_up_string(prev_response):
+    temp = []
+
+    temp = DBO_Follow_Up.get_specific_follow_up_template(prev_response.move_id)
+    if temp == None:
+        return None
+
+    temp.blank_dictionary = prev_response.blank_dictionary_move
+    temp.split_template()
+    temp.fill_blank_template()
+    return temp
+
+def suggest_again(world, coreferenced_text):
+    if world.suggest_continue_count == 3:
+        world.suggest_continue_count = 0
+        choice = MOVE_SPECIFIC_PUMP
+        output = generate_response(choice, world, [], coreferenced_text)
+                
+    else:
+        choice = MOVE_SUGGESTING
+        output = generate_response(choice, world, [], coreferenced_text)
+    
+    return output

@@ -77,7 +77,6 @@ def get_templates_of_type(type):
         cursor.execute(sql)
         # Fetch all the rows in a list of lists.
         result = cursor.fetchall()
-        
         for row in result:
 
             id          = row[0]

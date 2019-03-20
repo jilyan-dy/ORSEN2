@@ -10,6 +10,11 @@ MOVE_UNKNOWN = 6
 MOVE_PROMPT = 7
 MOVE_SUGGESTING = 8
 
+MOVE_FEEDBACK_GENERAL = 9
+MOVE_FEEDBACK_SPECIFIC = 10
+MOVE_FEEDBACK_HINT = 11
+MOVE_FEEDBACK_SUGGESTING = 12
+
 class World:
 
     def __init__(self, id="-1"):
@@ -21,6 +26,8 @@ class World:
         self.relationships = {}
         self.settings = {}
         self.event_chain = []
+        self.global_concept_list = []
+        self.local_concept_list = []
 
         # RESPONSE ELEMENTS
         self.responses = [] #List of moves
@@ -36,6 +43,11 @@ class World:
         self.hint_count = 0
         self.suggest_count = 0
         self.prompt_count = 0
+
+        self.feedback_general_count = 0
+        self.feedback_specific_count = 0
+        self.feedback_hint_count = 0
+        self.feedback_suggest_count = 0
 
     def add_character(self, char):
         if char.id not in self.objects and char.id not in self.characters:
@@ -113,13 +125,17 @@ class World:
         self.responses.append(response)
         if response.type_num == MOVE_FEEDBACK or response.type_num == MOVE_GENERAL_PUMP:
             self.general_response_count += 1
+        else:
+            self.general_response_count = 0
+        '''
             self.suggest_continue_count = 0
         elif response.type_num == MOVE_SUGGESTING:
             self.suggest_continue_count +=1
             self.general_response_count = 0
         elif response.type_num != MOVE_SUGGESTING or response.type_num != MOVE_UNKNOWN:
+            print("HHHIIII")
             self.general_response_count = 0
-            self.suggest_continue_count = 0
+            self.suggest_continue_count = 0'''
     
     def add_response_type_count(self, response):
         if response.type_num == MOVE_FEEDBACK:
@@ -138,6 +154,16 @@ class World:
         curr_responses = [self.feedback_count, self.general_pump_count, self.specific_pump_count, self.hint_count, self.suggest_count]
         for i in range (len(curr_responses)):
             print(curr_responses[i])
+
+    def add_combination_response_type_count(self, type):
+        if type == MOVE_FEEDBACK_GENERAL:
+            self.feedback_general_count
+        elif type == MOVE_FEEDBACK_SPECIFIC:
+            self.feedback_specific_count
+        elif type == MOVE_FEEDBACK_HINT:
+            self.feedback_hint_count
+        elif type == MOVE_FEEDBACK_SUGGESTING:
+            self.feedback_suggest_count
         
     def compute_weights_dialogue(self):
         total_responses = 0
