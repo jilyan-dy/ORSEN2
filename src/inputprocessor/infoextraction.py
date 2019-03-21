@@ -621,7 +621,7 @@ def getCategory(sentence):
     # checks if entry has "orsen"
     if 'orsen' in sentence or 'im stuck' == sentence or "i'm stuck" == sentence or 'your turn' == sentence or 'help me' == sentence or 'help me start' == sentence:
         return CAT_COMMAND
-    elif 'yes' == sentence or 'no' == sentence:
+    elif 'yes' == sentence or 'no' == sentence or "don't like" in sentence or "dont like" in sentence or "wrong" in sentence:
         return CAT_ANSWER
     else:
         return CAT_STORY
@@ -2184,7 +2184,7 @@ def remove_existing_relations_local(userid, extracted):
             result.append(extracted[i])
         # else update it's score
         else:
-            if temp.userid != userid:
+            if temp.userid != userid and temp.valid == 1:
                 DBO_Local_Concept.update_score(temp.id, temp.score + 1.25)
 
         temp = None
