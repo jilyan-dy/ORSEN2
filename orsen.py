@@ -85,7 +85,7 @@ def orsen():
 			retrieved = retrieve_output("", storyId)
 			
 			if retrieved.type_num == MOVE_HINT:
-				extract_info(retrieved.get_string_response())
+				extract_info(userid, retrieved.get_string_response())
 	
 			output_reply = retrieved.get_string_response()
 			#reprompt user
@@ -203,7 +203,7 @@ def orsen():
 			retrieved = retrieve_output(rawTextQuery, storyId)
 
 			if retrieved.type_num == MOVE_HINT:
-				extract_info(retrieved.get_string_response())
+				extract_info(userid, retrieved.get_string_response())
 
 			output_reply = retrieved.get_string_response()
 			data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":""+output_reply+""}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}

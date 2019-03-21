@@ -2188,7 +2188,7 @@ def remove_existing_relations_local(userid, extracted):
         # else update it's score
         else:
             if temp.userid != userid:
-                DBO_Local_Concept.update_score(temp.id, temp.score + 1.25) # JILYAN, YOU HAVE TO CHANGE THIS
+                DBO_Local_Concept.update_score(temp.id, temp.score + 1.25)
 
         temp = None
 
