@@ -8,6 +8,7 @@ import requests
 import re
 from src.dialoguemanager.story_generation import generate_basic_story, generate_collated_story
 from src.inputprocessor.infoextraction import getCategory, CAT_STORY
+from src.db import DBO_User, User
 #import logging
 app = Flask(__name__)
 
@@ -32,6 +33,10 @@ endstorygen = False
 endconvo = False
 
 story_list = []
+turn_count = 0
+userid = -1
+username = ""
+secret_code = ""
 
 def main_intent():
 	return None
@@ -44,13 +49,13 @@ def home():
 	
 @app.route('/orsen', methods=["POST"])
 def orsen():
-	global manwal_kawnt, storyId, endstory, endstorygen, story_list
+	global manwal_kawnt, storyId, endstory, endstorygen, story_list, turn_count, userid, username, secret_code
 	
 	#print(json.dumps(request.get_json()))
 	requestJson = request.get_json()
 	
 	focus = requestJson["inputs"][0]#["rawInputs"][0]["query"]
-	#print(focus["intent"])
+	# print(focus["intent"])
 	
 	#When the app invocation starts, create storyid and greet the user and reset reprompt count
 	if focus["intent"] == "actions.intent.MAIN":
@@ -59,9 +64,10 @@ def orsen():
 		new_world(storyId)
 		#reset reprompt count
 		manwal_kawnt = 0
+		turn_count = turn_count + 1
 		#greet user (app.ask)
-		data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Hi! Let's create a story. You start"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
-	
+		data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Hi! What's your name?"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
+
 	elif focus["intent"] == "actions.intent.GIVE_IDEA_ORSEN":
 		data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Okay, I will give you a hint"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
 	
@@ -84,12 +90,58 @@ def orsen():
 			output_reply = retrieved.get_string_response()
 			#reprompt user
 			data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":""+output_reply+""}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
+	
+	elif turn_count == 1:
+		rawTextQuery = requestJson["inputs"][0]["rawInputs"][0]["query"]
+		turn_count = turn_count + 1
+		username = str(rawTextQuery).split()
+		username = username[len(username)-1].lower()
+		data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Do we have a secret code?"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
+		
+	elif turn_count == 2:
+		rawTextQuery = requestJson["inputs"][0]["rawInputs"][0]["query"]
+		if str(rawTextQuery).lower() == "yes":
+			turn_count = turn_count + 2
+			data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"I see, can you tell me what it is?"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
+		else:
+			turn_count = turn_count + 1
+			data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"I see, let's make one then. So what will it be?"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
+		
+	elif turn_count == 3:
+		rawTextQuery = requestJson["inputs"][0]["rawInputs"][0]["query"]
+		if str(rawTextQuery) != "":
+			secret_code = str(rawTextQuery).split()
+			secret_code = secret_code[len(secret_code)-1].lower()
+			turn_count = turn_count + 2
+			# add to DB
+			user = User.User(-1, username, secret_code)
+			DBO_User.add_user(user)
+			# get user id
+			userid = DBO_User.get_user_id(username, secret_code)
+			data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Yey, a new friend! Let's make a story. You go first " + username + "."}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
+
+	elif turn_count == 4:
+		rawTextQuery = requestJson["inputs"][0]["rawInputs"][0]["query"]
+		secret_code = str(rawTextQuery).split()
+		secret_code = secret_code[len(secret_code)-1].lower()
+		# check if username and secret code match in db
+
+		userid = DBO_User.get_user_id(username, secret_code)
+		print("user id")
+		print(userid)
+		if userid != -1:
+			turn_count = turn_count + 1
+			data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Oh, you remembered " + username + "! Okay, let's make a story then. you start!"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
+		else:
+			print("try again")
+			data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Hmm, I don't think that was our secret code. Why don't you give it another try " + username + "?"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
+
 	#When there is input, simply pass to model and get reply
 	else:
 		rawTextQuery = requestJson["inputs"][0]["rawInputs"][0]["query"]
 	
 		manwal_kawnt =0
-		userId = requestJson["user"]["userId"] # some really long id
+		# userId = requestJson["user"]["userId"] # some really long id
 		data = {}
 		genstory = ""
 	
@@ -124,6 +176,7 @@ def orsen():
 				endstorygen = False
 				endstory = False
 				story_list = []
+				turn_count = 0
 				
 			#If the user does not want to create a new story 
 			else:
@@ -131,6 +184,8 @@ def orsen():
 				data = {"expectUserResponse": False, "finalResponse": {"speechResponse": {"textToSpeech": "Thank you. Goodbye"}}}
 				endstorygen = False
 				endstory = False
+				story_list = []
+				turn_count = 0
 				
 		#when the user says they want to stop telling the story
 		elif rawTextQuery == "bye" or rawTextQuery == "the end" or rawTextQuery == "the end.":
@@ -142,7 +197,7 @@ def orsen():
 			story_list.append(rawTextQuery)
 			if getCategory(rawTextQuery) == CAT_STORY:
 				# you can pass user id here
-				extract_info(story_list)
+				story_list[len(story_list)-1] = extract_info(userid, story_list)
 
 			#dialogue
 			retrieved = retrieve_output(rawTextQuery, storyId)

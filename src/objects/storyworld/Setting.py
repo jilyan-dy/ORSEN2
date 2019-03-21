@@ -9,4 +9,4 @@ class Setting:
         self.type = type
 
     def __str__(self):
-        return "SETTING ID %s: \n\tName: %s \n\tType: %s\n" % (str(self.id), self.name, self.type)
+        return "SETTING ID: %s \n\tName: %s \n\tType: %s\n" % (str(self.id), self.name, self.type)
