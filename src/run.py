@@ -16,42 +16,38 @@ def new_world(id):
     world_id = id
     server.new_world(world_id)
 
-def extract_info(text):
-    print("EXTRACTING........")
+def extract_info(userid, text):
     world = server.get_world(world_id)
-    document = nlp(str(text))
-    sentences = [sent.string.strip() for sent in document.sents]
+    document_curr = nlp(str(text[len(text)-1]))
+    sentences = [sent.string.strip() for sent in document_curr.sents]
+    if len(text) > 1:
+        document_prev = nlp(str(text[len(text)-2]))
+        sentences_prev = [sent.string.strip() for sent in document_prev.sents]
+        sentences = sentences_prev + sentences
     list_of_sentences = []
     list_of_sent = []
     characters = []
 
-    world = server.get_world(world_id)
-    document = nlp(str(text[len(text)-1]))
-    sentences_curr = [sent.string.strip() for sent in document.sents]
-    sentences_curr = sentences_curr[0]
     # Part-Of-Speech, NER, Dependency Parsing
-    sentences_curr = nlp(sentences_curr) # go thru spacy
-    print(sentences_curr)
-    list_of_sentences.append(infoextraction.pos_ner_nc_processing(sentences_curr))
+    for sent in sentences:
+        sent = nlp(sent) # go thru spacy
+        list_of_sentences.append(infoextraction.pos_ner_nc_processing(sent))
 
-    if len(text) > 1:
-        document = nlp(str(text[len(text)-2]))
-        sentences_prev = [sent.string.strip() for sent in document.sents]
-        sentences_prev = sentences_prev[0]
-        sentences_prev = nlp(sentences_prev) # go thru spacy
-        list_of_sentences.append(infoextraction.pos_ner_nc_processing(sentences_prev))
+    # DetailsExtraction
+    if len(text) == 1:
+        curr = 0
+        sentences[curr] = infoextraction.coref_resolution(list_of_sentences[curr], sentences[curr], sentences[curr], world, True)
+    else:
+        curr = 1
+        bef = 0
+        sentences[curr] = infoextraction.coref_resolution(list_of_sentences[curr], sentences[curr], sentences[bef], world, False)
 
+    s = nlp(sentences[len(sentences)-1])
+    list_of_sent.append(infoextraction.pos_ner_nc_processing(s))
 
-     # DetailsExtraction
-    if len(text) > 1:
-        list_of_sentences[0] = infoextraction.coref_resolution(list_of_sentences[0], list_of_sentences[0], list_of_sentences[1], world, False)
-
-    # for s in sentences:
-    #     s = nlp(s)
-    #     list_of_sent.append(infoextraction.pos_ner_nc_processing(s))
-
-    infoextraction.details_extraction(list_of_sentences[0], world, "ROOT")
-    infoextraction.event_extraction(list_of_sentences[0], world, "ROOT")
+    for s in list_of_sent:
+        infoextraction.details_extraction(s, world, "ROOT")
+        infoextraction.event_extraction(s, world, "ROOT")
 
     print("-------- CHARACTERS")
     for c in world.characters:
@@ -86,19 +82,21 @@ def extract_info(text):
     extracted = None
     
     # extract all possible relations from sentence input
-    extracted = infoextraction.extract_relation(list_of_sentences[0])
+    extracted = infoextraction.extract_relation(list_of_sent[0])
 
     # remove relations that already exist in the global kb
     extracted = infoextraction.remove_existing_relations_global(extracted)
 
     # remove relations that already exist in the local kb
-    extracted = infoextraction.remove_existing_relations_local(-1, extracted)
+    extracted = infoextraction.remove_existing_relations_local(userid, extracted)
 
     # add new relations to local kb
     if extracted != []:
-        infoextraction.add_relations_to_local(-1, extracted) # Jilyan How will you get the user id???
+        infoextraction.add_relations_to_local(userid, extracted) # Jilyan How will you get the user id???
     else:
-        result = infoextraction.find_unkown_word(list_of_sentences[0]) # pass this to celina
+        result = infoextraction.find_unkown_word(list_of_sent[0]) # pass this to celina
+
+    return sentences[len(sentences)-1]
 
 
 '''

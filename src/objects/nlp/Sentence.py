@@ -7,6 +7,7 @@ class Sentence:
     tag = []                # part of speech acronym
     dep = []                # dependency
     children = []           # 
+    ner = []
 
     text_ent = []
     label = []

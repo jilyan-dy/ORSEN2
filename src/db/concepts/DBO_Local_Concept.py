@@ -194,7 +194,6 @@ def get_concept_specified(first, relation, second):
         # Fetch all the rows in a list of lists.
         row = cursor.fetchone()
 
-        
         id          = row[0]
         userid      = row[1]
         relation    = row[2]
