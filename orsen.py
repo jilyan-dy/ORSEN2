@@ -1,4 +1,4 @@
-from src.run import extract_info, new_world
+from src.run import extract_info, new_world, get_unkown_word
 from src.dialoguemanager.DialoguePlanner import *
 from flask import Flask
 from flask import jsonify
@@ -40,7 +40,7 @@ username = ""
 secret_code = ""
 
 #FOR FILES
-path ="C:/Users/ruby/Desktop/Thesis/ORSEN/Conversation Logs"
+path ="D:/Desktop/Jilyan/Academics/College/THESIS/Conversation Logs"
 date = datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 
 def main_intent():
@@ -239,15 +239,21 @@ def orsen():
 			if getCategory(rawTextQuery) == CAT_STORY:
 				# you can pass user id here
 				story_list[len(story_list)-1] = extract_info(userid, story_list)
+				result = get_unkown_word()
+			
+			if result != None:
+				output_reply = "Can you tell me more about " + result + "?"
 
-			#dialogue
-            #get the dialogue regardless of type
-			retrieved = retrieve_output(rawTextQuery, storyId)
+			else:
+				#dialogue
+				#get the dialogue regardless of type
+				retrieved = retrieve_output(rawTextQuery, storyId)
 
-			if retrieved.type_num == MOVE_HINT:
-				extract_info(userid, retrieved.get_string_response())
+				if retrieved.type_num == MOVE_HINT:
+					extract_info(userid, retrieved.get_string_response())
 
-			output_reply = retrieved.get_string_response()
+				output_reply = retrieved.get_string_response()
+				
 			data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":""+output_reply+""}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
 	
 			print("I: ", rawTextQuery)

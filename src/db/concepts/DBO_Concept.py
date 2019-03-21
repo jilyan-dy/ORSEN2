@@ -100,18 +100,13 @@ def get_word_concept(word):
         # Fetch all the rows in a list of lists.
         result = cursor.fetchall()
 
-        id = -1
-        relation = ""
-        first = ""
-        second = ""
-
         for row in result:
             id          = row[0]
             relation    = row[1]
             first       = row[2]
             second      = row[3]
 
-        resulting.append(Concept(id, first, relation, second))
+            resulting.append(Concept(id, first, relation, second))
 
     except:
         print("Error Concept: unable to fetch data for word "+word)

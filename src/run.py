@@ -10,6 +10,11 @@ server = ServerInstance()
 nlp = spacy.load('en_coref_sm')
 doc = nlp(u'My sister has a dog. She loves him.')
 print(doc._.coref_clusters)
+result = None
+
+
+def get_unkown_word():
+    return result
 
 def new_world(id):
     global world_id
@@ -17,6 +22,7 @@ def new_world(id):
     server.new_world(world_id)
 
 def extract_info(userid, text):
+    global result
     world = server.get_world(world_id)
     document_curr = nlp(str(text[len(text)-1]))
     sentences = [sent.string.strip() for sent in document_curr.sents]
