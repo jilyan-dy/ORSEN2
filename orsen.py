@@ -234,6 +234,7 @@ def orsen():
 			fileWriter.write("ORSEN: Wow. Thanks for the story. Do you want to hear the full story?" + "\n")
             
 		else:
+			result = None
 			story_list.append(rawTextQuery)
 			# if the reply is a story, then extract info and add in story. If not, then don't add
 			if getCategory(rawTextQuery) == CAT_STORY:

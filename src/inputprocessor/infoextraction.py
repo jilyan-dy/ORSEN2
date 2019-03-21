@@ -388,6 +388,8 @@ def add_capability(sent, attr, subject, world, num, i=""):
 
 
 def add_objects(sent, child, dep, lemma, world, subject="", negated=""):
+    print("WAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+    print(lemma)
     list_of_char = char_conj_extractions(sent, child)
     for c in list_of_char:
         c = c.lower()
@@ -400,6 +402,8 @@ def add_objects(sent, child, dep, lemma, world, subject="", negated=""):
                 new_character.id = c
                 new_character.attributes = []
                 new_character.type = []
+                new_character.type.append("person")
+                new_character.type.append("character")
                 new_character.inSetting = {'LOC': None, 'DATE': None, 'TIME': None}
                 if sent.location:
                     new_character.inSetting = sent.location
@@ -682,6 +686,10 @@ def coref_resolution(s, sent_curr, sent_bef, world, isFirst):
                         new_character.name = str(value)
                         new_character.id = str(value)
                         new_character.gender = "M"
+                        type = find_ent_index(s, str(value))
+                        if type != None:
+                            print(type)
+                            new_character.type.append(type)
                         world.add_character(new_character)
                         world.characters[new_character.id].timesMentioned += 1
 
@@ -690,6 +698,10 @@ def coref_resolution(s, sent_curr, sent_bef, world, isFirst):
                         new_character.name = str(value)
                         new_character.id = str(value)
                         new_character.gender = "F"
+                        type = find_ent_index(s, str(value))
+                        if type != None:
+                            print(type)
+                            new_character.type.append(type)
                         world.add_character(new_character)
                         world.characters[new_character.id].timesMentioned += 1
 
