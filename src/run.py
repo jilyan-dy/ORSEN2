@@ -17,8 +17,6 @@ def new_world(id):
     server.new_world(world_id)
 
 def extract_info(userid, text):
-    print(type(text))
-    print(type(text[0]))
     world = server.get_world(world_id)
     document_curr = nlp(str(text[len(text)-1]))
     sentences = [sent.string.strip() for sent in document_curr.sents]

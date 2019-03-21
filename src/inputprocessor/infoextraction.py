@@ -26,7 +26,7 @@ def reading(filename):
 def pos_ner_nc_processing(sentence):
     new_sentence = Sentence()
     new_sentence.words = sentence
-    
+
     for token in sentence:
         new_sentence.children.append([])
         new_sentence.text_token.append(token.text)
@@ -226,8 +226,7 @@ def details_extraction(sent, world, current_node, subj="", neg="", text=""):
                         dative = compound_extraction(sent, sent.children[num][0])
                 else:
                     dative = compound_extraction(sent, str(sent.children[i][j]))
-                    add_objects(sent, str(dative), sent.dep[num], sent.lemma[i],
-                                world)
+                    add_objects(sent, str(dative), sent.dep[num], sent.lemma[i],world)
 
                 sent.finished_nodes[num] = 1
 
@@ -331,6 +330,7 @@ def compound_extraction(sent, subj):
 
 def char_conj_extractions(sent, subj):
     # print("ENTERED char_conj_extractions")
+    
     subj = str(subj).lower()
     list_of_conj = [subj]
     temp = str(subj).split()
@@ -628,7 +628,6 @@ def getCategory(sentence):
 
 def coref_resolution(s, sent_curr, sent_bef, world, isFirst):
     print("ENTERED coref_resolution")
-
     coref = Coref()
 
     num_prn = 0
@@ -708,7 +707,6 @@ def coref_resolution(s, sent_curr, sent_bef, world, isFirst):
         #          count += 1
         #        else:
         #          single_sc_lib.append(float(single_mention.get(i)))
-
         # count -=1
         # print("COUNT", count)
         # print("SINGLE_SC_LIB", single_sc_lib)
@@ -776,7 +774,6 @@ def coref_resolution(s, sent_curr, sent_bef, world, isFirst):
 
                 isThis = ""
                 changeThis = ""
-
     return sent_curr
 
 

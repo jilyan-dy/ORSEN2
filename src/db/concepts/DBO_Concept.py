@@ -111,7 +111,7 @@ def get_word_concept(word):
             first       = row[2]
             second      = row[3]
 
-            resulting.append(Concept(id, first, relation, second))
+        resulting.append(Concept(id, first, relation, second))
 
     except:
         print("Error Concept: unable to fetch data for word "+word)
@@ -248,4 +248,4 @@ def add_concept(concept):
     except:
         print("Error Concept: unable to insert data "+concept.__str__())
         conn.close()
-        return False
+    return False
