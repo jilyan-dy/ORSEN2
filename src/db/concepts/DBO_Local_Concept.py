@@ -220,7 +220,7 @@ def get_concept_like(relation, first="", second=""):
           "score, " \
           "valid " \
           "FROM local_concepts " \
-          "WHERE first LIKE '%"+first+"%' AND second LIKE '%"+second+"%' AND relation = '"+relation+"'"
+          "WHERE first LIKE '%"+first+"%' AND second LIKE '%"+second+"%' AND relation = '"+relation+"' AND valid = 1"
 
     conn = SqlConnConcepts.get_connection()
     cursor = conn.cursor()

@@ -33,8 +33,13 @@ class World:
         self.responses = [] #List of moves
         self.empty_response = 0
         self.general_response_count = 0
+
+        # For suggestion
         self.continue_suggesting = 0 #1 means yes continue to suggest. #0 means no
         self.suggest_continue_count = 0
+        self.subject_suggest = None
+        self.node_pos = -1
+
         
         #responses count
         self.feedback_count = 0
@@ -151,9 +156,9 @@ class World:
         elif response.type_num == MOVE_PROMPT: 
             self.prompt_count += 1
         
-        curr_responses = [self.feedback_count, self.general_pump_count, self.specific_pump_count, self.hint_count, self.suggest_count]
-        for i in range (len(curr_responses)):
-            print(curr_responses[i])
+        # curr_responses = [self.feedback_count, self.general_pump_count, self.specific_pump_count, self.hint_count, self.suggest_count]
+        # for i in range (len(curr_responses)):
+        #     print(curr_responses[i])
 
     def add_combination_response_type_count(self, type):
         if type == MOVE_FEEDBACK_GENERAL:

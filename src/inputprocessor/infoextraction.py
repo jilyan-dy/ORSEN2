@@ -402,8 +402,9 @@ def add_objects(sent, child, dep, lemma, world, subject="", negated=""):
                 new_character.id = c
                 new_character.attributes = []
                 new_character.type = []
-                new_character.type.append("person")
-                new_character.type.append("character")
+                # Incorectly labels every noun as a character
+                # new_character.type.append("person") CELINA
+                # new_character.type.append("character")
                 new_character.inSetting = {'LOC': None, 'DATE': None, 'TIME': None}
                 if sent.location:
                     new_character.inSetting = sent.location

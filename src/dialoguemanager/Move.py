@@ -34,5 +34,7 @@ class Move:
             string += str(self.subject.name)+" : "+repr(self.subject)
         else:
             string += "No subject."
+        
+        string += "\n -----"
 
         return string

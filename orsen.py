@@ -40,7 +40,7 @@ username = ""
 secret_code = ""
 
 #FOR FILES
-path ="D:/Desktop/Jilyan/Academics/College/THESIS/Conversation Logs"
+path ="C:/Users/ruby/Desktop/Thesis/ORSEN/Conversation Logs"
 date = datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 
 def main_intent():
@@ -248,7 +248,7 @@ def orsen():
 			else:
 				#dialogue
 				#get the dialogue regardless of type
-				retrieved = retrieve_output(rawTextQuery, storyId)
+				retrieved = retrieve_output(rawTextQuery, storyId, userid)
 
 				if retrieved.type_num == MOVE_HINT:
 					extract_info(userid, retrieved.get_string_response())
