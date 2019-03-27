@@ -120,7 +120,7 @@ def orsen():
 		
 	elif turn_count == 2:
 		rawTextQuery = requestJson["inputs"][0]["rawInputs"][0]["query"]
-		if str(rawTextQuery).lower() == "yes":
+		if "yes" in str(rawTextQuery).lower():
 			turn_count = turn_count + 2
 			data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"I see, can you tell me what it is?"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
 		else:
