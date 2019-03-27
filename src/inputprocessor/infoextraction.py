@@ -1109,7 +1109,7 @@ def event_extraction(sentence, world, current_node):
                     event_attr.append('-')
 
         elif sentence.dep[i] != 'conj' and sentence.pos[i] == 'VERB' and sentence.dep[i] != 'nsubj' and sentence.dep[
-            i] != 'advcl' and sentence.dep[i] != 'pcomp' and sentence.dep[i] != 'acomp' and sentence.dep[i] != 'xcomp':
+            i] != 'advcl' and sentence.dep[i] != 'pcomp' and sentence.dep[i] != 'acomp' and sentence.dep[i] != 'xcomp' and i > 1: # (jilyan) added i>1 bec error
             # print("inside third case", sentence.dep[i])
             if sentence.dep[i - 1] != 'neg' and (sentence.dep[i - 2] != 'aux' or sentence.dep[i - 2] != 'auxpass'):
                 if sentence.dep[i - 1] != 'aux' and sentence.dep[i - 1] != 'auxpass':
@@ -1411,9 +1411,9 @@ def event_extraction(sentence, world, current_node):
                                         test_obj = sentence.text_token[i + k]
 
                                         if sentence.dep[i + k - 1] == 'neg' or sentence.dep[i + k - 1] == 'aux':
-                                            event_attr[x] += "," + sentence.text_token[i + k - 1] + " " + test_obj
+                                            event_attr[len(event_attr)-1] += "," + sentence.text_token[i + k - 1] + " " + test_obj  # this was originally event_attr[x] but i changed it because there is no x and it keeps getting errors - jilyan
                                         else:
-                                            event_attr[x] += "," + test_obj
+                                            event_attr[len(event_attr)-1] += "," + test_obj # this was originally event_attr[x] but i changed it because there is no x and it keeps getting errors - jilyan
 
             if isFound_acomp is False:
                 if sentence.dep[i - 1] == 'neg':
@@ -1611,16 +1611,17 @@ def event_extraction(sentence, world, current_node):
 
             for x in range(0, len(sentence.dep)):
                 # if (len(event_prep)-1 > x): #I ADDED THIS - CELINA. If will remove, lipat yung mga naka tab na if!
-                if sentence.dep[x] == 'conj' and sentence.head_text[x] == event_prep[len(event_prep) - 1]:
-                    event_subj.append(event_subj[len(event_subj) - 1])
-                    event_type.append(event_type[len(event_type) - 1])
-                    event_subj_act.append(event_subj_act[len(event_subj_act) - 1])
-                    event_prep.append(sentence.text_token[x])
-                    event_pobj.append('-')
-                    event_iobj.append('-')
-                    event_attr.append(event_attr[len(event_attr) - 1])
-                    event_detail.append(event_detail[len(event_detail) - 1])
-                    event_dobj.append(event_dobj[len(event_dobj) - 1])
+                if len(event_prep) > 0: # Jilyan added this, not sure if tama pero just to avoid index out of bounds
+                    if sentence.dep[x] == 'conj' and sentence.head_text[x] == event_prep[len(event_prep) - 1]:
+                        event_subj.append(event_subj[len(event_subj) - 1])
+                        event_type.append(event_type[len(event_type) - 1])
+                        event_subj_act.append(event_subj_act[len(event_subj_act) - 1])
+                        event_prep.append(sentence.text_token[x])
+                        event_pobj.append('-')
+                        event_iobj.append('-')
+                        event_attr.append(event_attr[len(event_attr) - 1])
+                        event_detail.append(event_detail[len(event_detail) - 1])
+                        event_dobj.append(event_dobj[len(event_dobj) - 1])
 
         if sentence.dep[i] == 'pobj' or sentence.dep[i] == 'pcomp':
             head_hold = sentence.head_text[i]
@@ -2170,14 +2171,17 @@ def extract_relation(sent):
                             flag = False
                             break
                     # check in case of conjunction ex. "Penny can sing and dance"
-                    if flag and str(sent.text_token[second_index+1]).lower() == "and" and rel_templates[i].second == str(sent.pos[second_index+2]).lower():
-                        second_word = compound_extraction(sent, sent.lemma[second_index+2])
+                    while flag and second_index < len(sent.lemma)-2 \
+                        and (str(sent.text_token[second_index+1]).lower() == "and" or str(sent.text_token[second_index+1]).lower() == ",") \
+                            and rel_templates[i].second == str(sent.pos[second_index+2]).lower():
+                        second_index = second_index + 2
+                        second_word = compound_extraction(sent, sent.lemma[second_index])
                         if second_word not in ignore:
                             if sent.lemma[second_index] in second_word:
                                 extracted.append(Relation.Relation(rel_templates[i].id, rel_templates[i].relation, first_word, rel_templates[i].keywords, second_word))
                                 print("appended: " + extracted[len(extracted)-1].__str__())
                             else:
-                                extracted.append(Relation.Relation(rel_templates[i].id, rel_templates[i].relation, first_word, rel_templates[i].keywords, sent.lemma[second_index+2]))
+                                extracted.append(Relation.Relation(rel_templates[i].id, rel_templates[i].relation, first_word, rel_templates[i].keywords, sent.lemma[second_index]))
                                 print("appended: " + extracted[len(extracted)-1].__str__())
                         else:
                             second_index = -1

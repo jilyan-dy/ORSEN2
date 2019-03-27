@@ -11,7 +11,7 @@ nlp = spacy.load('en_coref_sm')
 doc = nlp(u'My sister has a dog. She loves him.')
 print(doc._.coref_clusters)
 result = None
-
+prompt_unknown = 0
 
 def get_unkown_word():
     return result
@@ -22,8 +22,19 @@ def new_world(id):
     server.new_world(world_id)
 
 def extract_info(userid, text):
-    global result
-    result = None
+    global result, prompt_unknown
+    print("weeeeee")
+    print(result)
+    print(prompt_unknown)
+    if result != None and result in str(text[len(text)-1]):
+        result = None
+        prompt_unknown = 0
+    elif result != None and prompt_unknown < 2:
+        prompt_unknown = prompt_unknown + 1
+    else:
+        prompt_unknown = 0
+        result = None
+
     world = server.get_world(world_id)
     document_curr = nlp(str(text[len(text)-1]))
     sentences = [sent.string.strip() for sent in document_curr.sents]
@@ -99,9 +110,12 @@ def extract_info(userid, text):
 
     # add new relations to local kb
     if extracted != []:
-        infoextraction.add_relations_to_local(userid, extracted) # Jilyan How will you get the user id???
+        infoextraction.add_relations_to_local(userid, extracted)
     else:
-        result = infoextraction.find_unkown_word(list_of_sent[0]) # pass this to celina
+        temp = infoextraction.find_unkown_word(list_of_sent[0]) 
+        if temp != None:
+            prompt_unknown = prompt_unknown + 1
+            result = temp
 
     return sentences[len(sentences)-1]
 
