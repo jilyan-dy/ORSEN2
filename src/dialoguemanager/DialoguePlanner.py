@@ -100,7 +100,7 @@ def retrieve_output(coreferenced_text, world_id, userid):
                     local_concept = DBO_Local_Concept.get_concept_by_id(concept_id)
 
                     if local_concept.userid != userid:
-                        new_score = local_concept.score - 1.0     #Minus the score
+                        new_score = local_concept.score - 1.5     #Minus the score
                         DBO_Local_Concept.update_score(concept_id, new_score) #Update the score
 
                 category = -1    
@@ -147,7 +147,7 @@ def retrieve_output(coreferenced_text, world_id, userid):
                     local_concept = DBO_Local_Concept.get_concept_by_id(last_response_concept_id)
 
                     if local_concept.userid != userid:
-                        new_score = local_concept.score + 1.0     #Add the score
+                        new_score = local_concept.score + 1.5     #Add the score
                         DBO_Local_Concept.update_score(last_response_concept_id, new_score) #Update the score
 
                         #If score exceeds, change assertion/concept type to global
@@ -214,14 +214,16 @@ def retrieve_output(coreferenced_text, world_id, userid):
                         ("suggest" in coreferenced_text and "sentence" in coreferenced_text) or \
                         ("give" in coreferenced_text and "hint" in coreferenced_text)
 
-            is_pump = ("what" in coreferenced_text and \
-                       ("say" in coreferenced_text or "next" in coreferenced_text or "talk" in coreferenced_text))
+            # is_pump = ("what" in coreferenced_text and \
+            #            ("say" in coreferenced_text or "next" in coreferenced_text or "talk" in coreferenced_text))
 
             is_either = "help" in coreferenced_text or \
-                            "stuck" in coreferenced_text or \
-                            ("give" in coreferenced_text and "idea" in coreferenced_text)
+                        "stuck" in coreferenced_text
             
-            is_suggesting = "trial" in coreferenced_text
+            is_suggesting = ("suggest" in coreferenced_text and "sentence" in coreferenced_text) or \
+                            ("give" in coreferenced_text and "idea" in coreferenced_text) or \
+                            "what happens next" in coreferenced_text or \
+                            "trial" in coreferenced_text
 
             if "help me start" in coreferenced_text:
                 output = generate_response(MOVE_PROMPT, world, [], coreferenced_text)
@@ -231,11 +233,11 @@ def retrieve_output(coreferenced_text, world_id, userid):
             # if len(world.responses) == 0:
             #     concepts = DBO_Concept.get_concept_like(txt_relation, second=txt_concept)
             if is_either:
-                choice = random.randint(MOVE_GENERAL_PUMP, MOVE_HINT+1)
+                choice = random.randint(MOVE_GENERAL_PUMP, MOVE_HINT+1) #between suggesting and hinting
             elif is_hint:
                 choice = MOVE_HINT
-            elif is_pump:
-                choice = random.randint(MOVE_GENERAL_PUMP, MOVE_SPECIFIC_PUMP+1)
+            # elif is_pump:
+            #     choice = random.randint(MOVE_GENERAL_PUMP, MOVE_SPECIFIC_PUMP+1)
             
             elif is_suggesting:
                 choice = MOVE_SUGGESTING
@@ -365,8 +367,10 @@ def generate_response(move_code, world, remove_index, text):
             remove_index.append(move.move_id)
             print("CHANGE MOVE")
 
-            if world.continue_suggesting == 1:
+            if world.continue_suggesting == 1: 
                 return generate_response(MOVE_SPECIFIC_PUMP, world, remove_index, text)
+            
+            # Add for hinting, if move_code == Hinting/Suggesting?
 
             else:
                 return generate_response(MOVE_FEEDBACK, world, remove_index, text)

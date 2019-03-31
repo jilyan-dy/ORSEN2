@@ -101,7 +101,7 @@ def orsen():
 		#reprompt user
 		else:
 			#get the reprompt
-			retrieved = retrieve_output("", storyId)
+			retrieved = retrieve_output("", storyId, userid)
 			
 			if retrieved.type_num == MOVE_HINT:
 				extract_info(userid, retrieved.get_string_response())
