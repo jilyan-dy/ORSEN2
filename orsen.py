@@ -72,7 +72,8 @@ def orsen():
 		new_world(storyId)
 		#reset reprompt count
 		manwal_kawnt = 0
-		turn_count = turn_count + 1
+		turn_count = 1
+		story_list = []
 		#greet user (app.ask)
 		data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Hi! What's your name?"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
         
@@ -119,7 +120,7 @@ def orsen():
 		
 	elif turn_count == 2:
 		rawTextQuery = requestJson["inputs"][0]["rawInputs"][0]["query"]
-		if str(rawTextQuery).lower() == "yes":
+		if "yes" in str(rawTextQuery).lower():
 			turn_count = turn_count + 2
 			data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"I see, can you tell me what it is?"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
 		else:
@@ -150,7 +151,7 @@ def orsen():
 		print(userid)
 		if userid != -1:
 			turn_count = turn_count + 1
-			data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Oh, you remembered " + username + "! Okay, let's make a story then. you start!"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
+			data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Oh, you remembered " + username + "! Okay, let's make a story then. You start!"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
 		else:
 			print("try again")
 			data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Hmm, I don't think that was our secret code. Why don't you give it another try " + username + "?"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
