@@ -27,7 +27,7 @@ class Character(Object):
     def convert_from_setting(setting):
         new_char = Character(setting.id, setting.id)
 
-        if setting.time != "" :
-            new_char.inSetting = Setting(setting.time,setting.time, setting.time)
+        # if setting.time != "" :
+        #     new_char.inSetting = Setting(setting.time,setting.time, setting.time)
 
         return new_char
