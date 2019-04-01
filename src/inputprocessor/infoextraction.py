@@ -1,5 +1,6 @@
 from src.db.concepts import DBO_Concept, DBO_Local_Concept
 from src.objects.concepts.Local_Concept import Local_Concept
+from src.objects.concepts.Concept import Concept
 from src.objects.eventchain.EventFrame import EventFrame, FRAME_DESCRIPTIVE, FRAME_EVENT, FRAME_CREATION
 from src.objects.nlp.Sentence import Sentence
 from src.objects.storyworld.Attribute import Attribute
@@ -437,7 +438,7 @@ def add_objects(sent, child, dep, lemma, world, subject="", negated=""):
         elif c in world.settings:
             if DBO_Concept.get_concept_specified("character", DBO_Concept.CAPABLE_OF, lemma) is not None \
                     and dep == "nsubj":
-                new_character = Character.convert_from_setting(c)
+                new_character = Character.convert_from_setting(world.settings[c])
                 world.add_character(new_character)
                 world.characters[new_character.id].timesMentioned += 1
 
@@ -595,10 +596,11 @@ def add_settings(sent, num, subject, negation, world):
         else:
             is_setting = True
 
-            if world.settings[str(sent.text_token[num]).lower()].type == "LOC":
-                current_location["LOC"] = ent_text
-            elif world.settings[str(sent.text_token[num])].type == "TIME":
-                current_location["TIME"] = ent_text
+            if str(sent.text_token[num]).lower() in world.settings:
+                if world.settings[str(sent.text_token[num]).lower()].type == "LOC":
+                    current_location["LOC"] = ent_text
+                elif world.settings[str(sent.text_token[num])].type == "TIME":
+                    current_location["TIME"] = ent_text
 
         for c in list_of_char:
             if str(c) in world.characters and current_location:
@@ -1466,7 +1468,7 @@ def event_extraction(sentence, world, current_node):
                                                 isConnected = True
                                                 isAdded = True
 
-                                        if isConnected is False:
+                                        if isConnected is False and len(event_dobj) >= len(event_subj_act) and len(event_subj_act) != 0:
                                             event_dobj[len(event_subj_act) - 1] = sentence.text_token[i]
 
                                         dobj_c -= 1
@@ -1640,7 +1642,7 @@ def event_extraction(sentence, world, current_node):
                         index = x
                         break
                 for z in range(0, len(event_prep)):
-                    if sentence.head_text[index] == event_subj_act[z]:
+                    if sentence.head_text[index] == event_subj_act[z] and len(event_dobj) > z and len(event_subj) > z:
                         event_dobj[z] = event_subj[z]
                         event_subj[z] = sentence.text_token[i]
                         test_pchar = sentence.text_token[i]
@@ -1677,8 +1679,8 @@ def event_extraction(sentence, world, current_node):
 
                                     if sentence.head_text[i + k] == test_obj or sentence.head_text[i + k] == ',':
                                         test_obj = sentence.text_token[i + k]
-
-                                        event_detail[x] += "," + test_obj
+                                        if len(event_detail) > 0:
+                                            event_detail[len(event_detail)-1] += "," + test_obj
                                         isFound_obj_act = True
                                         npadvmod_c -= 1
 
@@ -2064,9 +2066,10 @@ def find_unkown_word(sent):
     return None
 
 # extract all possible relations from input based on templates
-def extract_relation(sent):
+def extract_relation(sent, world):
     # print("ENTER extract_relation function")
 
+    not_verb = ["be", "can", "could", "have", "will", "would"]
     ignore = ["kill", "murder", "suicide", "sex", "rape", "war", "torture", "die", "stab", "penis", "dick", "vagina", "boobs", "breast"]
 
     first_word = ""
@@ -2078,6 +2081,7 @@ def extract_relation(sent):
     extracted = []
     start = 0
     flag = True
+    character_checker = ""
 
     # get all relation templates from DB
     rel_templates = DBO_Relation.get_all_relations_templates()
@@ -2092,6 +2096,9 @@ def extract_relation(sent):
             if str(sent.pos[i]).lower() == "noun" or str(sent.pos[i]).lower() == "pron" or str(sent.pos[i]).lower() == "propn":
                 first_index = i
                 first_word = compound_extraction(sent, sent.lemma[first_index])
+                character_checker = sent.text_token[first_index]
+                if character_checker < first_word:
+                    character_checker = first_word
                 if first_word not in ignore:
                     if sent.lemma[first_index] not in first_word:
                         first_word = sent.lemma[first_index]
@@ -2114,40 +2121,69 @@ def extract_relation(sent):
             # check all possible templates if it fits
             for i in range(len(rel_templates)):
                 flag = True
-                # for instances like "Jim jumped"
-                if rel_templates[i].keywords == "":
-                    # if keywords is empty
-                    if str(sent.pos[first_index+1]).lower() == rel_templates[i].second and sent.lemma[first_index+1] != "be" and \
-                        sent.lemma[first_index+1] != "can" and sent.lemma[first_index+1] != "could" and sent.lemma[first_index+1] != "have" and \
-                        sent.lemma[first_index+1] != "will" and sent.lemma[first_index+1] != "would":
-                        # if pos of second matches with second of template
-                        second_index = first_index+1
-                        second_word = compound_extraction(sent, sent.lemma[second_index])
-                        if second_word not in ignore:
-                            if sent.lemma[second_index] in second_word:
-                                extracted.append(Relation.Relation(rel_templates[i].id, rel_templates[i].relation, first_word, rel_templates[i].keywords, second_word))
-                                print("appended: " + extracted[len(extracted)-1].__str__())
-                            else:
-                                extracted.append(Relation.Relation(rel_templates[i].id, rel_templates[i].relation, first_word, rel_templates[i].keywords, sent.lemma[second_index]))
-                                print("appended: " + extracted[len(extracted)-1].__str__())
-                        else:
-                            second_word = ""
-                            second_index = -1
-
-                elif rel_templates[i].keywords in string:
-                    # if a template that is not empty fits split the keywords of the specific template
-                    keywords = rel_templates[i].keywords.split()
-                    for x in range(len(keywords)):
-                        if sent.lemma[first_index+1+x] != keywords[x]:
-                            flag = False
-                            break
-                    if flag:
-                        # if the keywords can be found immediatly after the noun found second will take position of the word right after keywords
-                        second_index = first_index + len(keywords) + 1
-                        if (str(sent.pos[second_index]).lower() == rel_templates[i].second) or (str(sent.pos[second_index]).lower() == "propn" and rel_templates[i].second == "noun"):
-                            # if the pos tag of the second words matches the template take the words as a relation
+                if not ((character_checker not in world.characters and first_word != "character" and rel_templates[i].relation == "CapableOf") or (character_checker in world.characters and first_word == "character" and rel_templates[i].relation == "ReceivesAction")):
+                    # for instances like "Jim jumped"
+                    if rel_templates[i].keywords == "":
+                        # if keywords is empty
+                        if str(sent.pos[first_index+1]).lower() == rel_templates[i].second and sent.lemma[first_index+1] not in not_verb:
+                            # if pos of second matches with second of template
+                            second_index = first_index+1
                             second_word = compound_extraction(sent, sent.lemma[second_index])
-                            if second_word not in ignore:
+                            if second_word not in ignore and second_word not in not_verb:
+                                if sent.lemma[second_index] in second_word:
+                                    extracted.append(Relation.Relation(rel_templates[i].id, rel_templates[i].relation, first_word, rel_templates[i].keywords, second_word))
+                                    print("appended: " + extracted[len(extracted)-1].__str__())
+                                else:
+                                    extracted.append(Relation.Relation(rel_templates[i].id, rel_templates[i].relation, first_word, rel_templates[i].keywords, sent.lemma[second_index]))
+                                    print("appended: " + extracted[len(extracted)-1].__str__())
+                            else:
+                                second_word = ""
+                                second_index = -1
+
+                    elif rel_templates[i].keywords in string:
+                        # if a template that is not empty fits split the keywords of the specific template
+                        keywords = rel_templates[i].keywords.split()
+                        for x in range(len(keywords)):
+                            if sent.lemma[first_index+1+x] != keywords[x]:
+                                flag = False
+                                break
+                        if flag:
+                            # if the keywords can be found immediatly after the noun found second will take position of the word right after keywords
+                            second_index = first_index + len(keywords) + 1
+                            if (str(sent.pos[second_index]).lower() == rel_templates[i].second) or (str(sent.pos[second_index]).lower() == "propn" and rel_templates[i].second == "noun"):
+                                # if the pos tag of the second words matches the template take the words as a relation
+                                second_word = compound_extraction(sent, sent.lemma[second_index])
+                                if second_word not in ignore and second_word not in not_verb:
+                                    if sent.lemma[second_index] in second_word:
+                                        extracted.append(Relation.Relation(rel_templates[i].id, rel_templates[i].relation, first_word, rel_templates[i].keywords, second_word))
+                                        print("appended: " + extracted[len(extracted)-1].__str__())
+                                    else:
+                                        extracted.append(Relation.Relation(rel_templates[i].id, rel_templates[i].relation, first_word, rel_templates[i].keywords, sent.lemma[second_index]))
+                                        print("appended: " + extracted[len(extracted)-1].__str__())
+                                else:
+                                    second_index = -1
+                                    second_word = ""
+                            else :
+                                # if pos tag does not match revert second_index to -1
+                                second_index = -1
+                        else:
+                            # if keywords not found immediatly after noun disregard
+                            keywords = None
+
+                    if second_index != -1 and second_index < len(sent.pos)-1:
+                        # if a template that is not empty fits split the keywords of the specific template
+                        keywords = rel_templates[i].keywords.split()
+                        for x in range(len(keywords)):
+                            if sent.lemma[first_index+1+x] != keywords[x]:
+                                flag = False
+                                break
+                        # check in case of conjunction ex. "Penny can sing and dance"
+                        while flag and second_index < len(sent.lemma)-2 \
+                            and (str(sent.text_token[second_index+1]).lower() == "and" or str(sent.text_token[second_index+1]).lower() == ",") \
+                                and rel_templates[i].second == str(sent.pos[second_index+2]).lower():
+                            second_index = second_index + 2
+                            second_word = compound_extraction(sent, sent.lemma[second_index])
+                            if second_word not in ignore and second_index not in not_verb:
                                 if sent.lemma[second_index] in second_word:
                                     extracted.append(Relation.Relation(rel_templates[i].id, rel_templates[i].relation, first_word, rel_templates[i].keywords, second_word))
                                     print("appended: " + extracted[len(extracted)-1].__str__())
@@ -2157,36 +2193,6 @@ def extract_relation(sent):
                             else:
                                 second_index = -1
                                 second_word = ""
-                        else :
-                            # if pos tag does not match revert second_index to -1
-                            second_index = -1
-                    else:
-                        # if keywords not found immediatly after noun disregard
-                        keywords = None
-
-                if second_index != -1 and second_index < len(sent.pos)-1:
-                    # if a template that is not empty fits split the keywords of the specific template
-                    keywords = rel_templates[i].keywords.split()
-                    for x in range(len(keywords)):
-                        if sent.lemma[first_index+1+x] != keywords[x]:
-                            flag = False
-                            break
-                    # check in case of conjunction ex. "Penny can sing and dance"
-                    while flag and second_index < len(sent.lemma)-2 \
-                        and (str(sent.text_token[second_index+1]).lower() == "and" or str(sent.text_token[second_index+1]).lower() == ",") \
-                            and rel_templates[i].second == str(sent.pos[second_index+2]).lower():
-                        second_index = second_index + 2
-                        second_word = compound_extraction(sent, sent.lemma[second_index])
-                        if second_word not in ignore:
-                            if sent.lemma[second_index] in second_word:
-                                extracted.append(Relation.Relation(rel_templates[i].id, rel_templates[i].relation, first_word, rel_templates[i].keywords, second_word))
-                                print("appended: " + extracted[len(extracted)-1].__str__())
-                            else:
-                                extracted.append(Relation.Relation(rel_templates[i].id, rel_templates[i].relation, first_word, rel_templates[i].keywords, sent.lemma[second_index]))
-                                print("appended: " + extracted[len(extracted)-1].__str__())
-                        else:
-                            second_index = -1
-                            second_word = ""
             
             # check if there was a noun found
             if first_index != -1:
@@ -2228,10 +2234,12 @@ def remove_existing_relations_local(userid, extracted):
         if temp == None:
             result.append(extracted[i])
         # else update it's score
-        else:
-            if temp.userid != userid and temp.valid == 1:
+        elif temp.valid == 1:
+            if temp.userid != userid:
                 DBO_Local_Concept.update_score(temp.id, temp.score + 1.25)
-
+            if temp.score + 1.25 >= 5: # change the 5
+                DBO_Concept.add_concept(Concept(0,temp.first, temp.relation, temp.second))
+                DBO_Local_Concept.update_valid(temp.id, 0)
         temp = None
 
     # print left in extracted list
