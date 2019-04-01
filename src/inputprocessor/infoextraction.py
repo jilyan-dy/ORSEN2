@@ -680,7 +680,12 @@ def coref_resolution(s, sent_curr, sent_bef, world, isFirst):
         if len(rep) > 0 and len(scores) > 0:
             for key, value in rep.items():
                 if str(key).lower() == "his" or str(key).lower() == "hers" or str(key).lower() == "their" or str(key).lower() == "our" or str(key).lower() == "its":
-                    sent_curr = sent_curr.replace(str(key), str(value) + "'s")
+                    sent_curr = sent_curr.split()
+                    for i in range(len(sent_curr)):
+                        if sent_curr[i].lower() == str(key).lower():
+                            sent_curr[i] = str(value) + "'s"
+
+                    sent_curr = " ".join(sent_curr)
                 else:
                     sent_curr = sent_curr.split()
                     for i in range(len(sent_curr)):
