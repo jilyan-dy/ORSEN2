@@ -183,10 +183,14 @@ class World:
             else:
                 weights.append(curr_responses[i]/total_responses)
 
+        #print("F, GP, SP, H, S")
+        #print("Weights", weights)
+
+        weights = numpy.reciprocal(weights)            
+        weights = weights / numpy.sum(weights)  
+        
         print("F, GP, SP, H, S")
         print("Weights", weights)
 
-        weights = numpy.reciprocal(weights)            
-        weights = weights / numpy.sum(weights)         
         return numpy.random.choice(elements, p=weights) 
         

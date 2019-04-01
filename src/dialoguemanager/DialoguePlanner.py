@@ -110,9 +110,13 @@ def retrieve_output(coreferenced_text, world_id, userid):
 
         elif category == CAT_STORY:
             # print("world", len(world.event_chain))
+            #if world.general_response_count < 3:
+            #    choice = MOVE_SUGGESTING
+
             if len(world.event_chain) <= STORY_THRESHOLD:
                 print("<< STILL IN GENERALIZED THRESHOLD >>")
                 choice = random.randint(MOVE_FEEDBACK, MOVE_GENERAL_PUMP+1)
+                #choice = MOVE_FEEDBACK
             elif world.general_response_count == GENERAL_RESPONSE_THRESHOLD:
                 print("<< GENERAL THRESHOLD REACHED - ATTEMPTING SPECIFIC RESPONSE >>")
                 choice = random.randint(MOVE_SPECIFIC_PUMP, MOVE_SPECIFIC_PUMP+1)
@@ -211,7 +215,7 @@ def retrieve_output(coreferenced_text, world_id, userid):
             choice = random.randint(MOVE_FEEDBACK, MOVE_SPECIFIC_PUMP+1)
 
             is_hint = "your turn" in coreferenced_text or \
-                        ("suggest" in coreferenced_text and "sentence" in coreferenced_text) or \
+                        "talk" in coreferenced_text or \
                         ("give" in coreferenced_text and "hint" in coreferenced_text)
 
             # is_pump = ("what" in coreferenced_text and \
@@ -290,6 +294,8 @@ def generate_response(move_code, world, remove_index, text):
 
     if len(world.responses) > 0:
         last_response_id = world.responses[len(world.responses)-1].move_id
+
+        print("LAST USED TEMPLATE RESPONSE: ", last_response_id)
     else:
         last_response_id = -1
 
@@ -379,7 +385,7 @@ def generate_response(move_code, world, remove_index, text):
     print(str(move))
 
     for blank_type in move.blanks:
-        print("SUBJECTSSS: ", subject_list)
+        print("CURRENT SUBJECTS: ", subject_list)
         subject = None # IDK????
         replace_subject_type_name = 0
         
@@ -479,6 +485,7 @@ def generate_response(move_code, world, remove_index, text):
                         # decided_concept = subject.name[random.randint(0, len(subject.type))]
                         choice_index = random.randint(0, len(subject.type))
                         decided_concept = subject.type[choice_index]
+                        print("SUBJECT TYPE: ", decided_concept)
                         subject_list.append(subject.name) #SUBJECT CELINA
                         replace_subject_type_name = 1
                         decided_node = NODE_START
@@ -591,7 +598,7 @@ def generate_response(move_code, world, remove_index, text):
 
                     concept_index = random.randint(0,len(usable_concepts))
                     concept = usable_concepts[concept_index]
-                    print("USABLE CON2", len(usable_concepts))
+                    #print("USABLE CON2", len(usable_concepts))
 
                 if replace_subject_type_name == 1:
                     concept.first = subject.name
@@ -611,6 +618,10 @@ def generate_response(move_code, world, remove_index, text):
                     world.global_concept_list.append(concept.id)
                 elif DATABASE_TYPE == DBO_Local_Concept:
                     world.local_concept_list.append(concept.id)
+                
+                print("USED GLOBAL ASSERTIONS ID: ", world.global_concept_list)
+                print("USED LOCAL ASSERTIONS ID: ", world.local_concept_list)
+
             else:
                 print("ERROR: NO USABLE CONCEPTS decided:",decided_concept)
                 remove_index.append(move.move_id)
@@ -662,7 +673,8 @@ def generate_response(move_code, world, remove_index, text):
                 if len(charas) > 0:
                     choice_index = random.randint(0, len(charas))
                     subject = charas[choice_index]
-
+                    # Line 668 sa Dialogue Planner
+                    # subject = charas[0]
                     #add condition here that shows na bawal ang character dito na same sa suggest subject?
                 else:
                     remove_index.append(move.move_id)
