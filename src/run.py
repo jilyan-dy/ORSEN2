@@ -26,7 +26,7 @@ def extract_info(userid, text):
     print("weeeeee")
     print(result)
     print(prompt_unknown)
-    if result != None and result in str(text[len(text)-1]):
+    if result != None and result in str(text[len(text)-1]).lower():
         result = None
         prompt_unknown = 0
     elif result != None and prompt_unknown < 2:
@@ -100,7 +100,7 @@ def extract_info(userid, text):
     extracted = None
     
     # extract all possible relations from sentence input
-    extracted = infoextraction.extract_relation(list_of_sent[0])
+    extracted = infoextraction.extract_relation(list_of_sent[0], world)
 
     # remove relations that already exist in the global kb
     extracted = infoextraction.remove_existing_relations_global(extracted)
