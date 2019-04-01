@@ -2239,9 +2239,6 @@ def remove_existing_relations_local(userid, extracted):
             if temp.score + 1.25 >= 5: # change the 5
                 DBO_Concept.add_concept(Concept(0,temp.first, temp.relation, temp.second))
                 DBO_Local_Concept.update_valid(temp.id, 0)
-
-            
-
         temp = None
 
     # print left in extracted list
