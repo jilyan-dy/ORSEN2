@@ -23,9 +23,9 @@ def new_world(id):
 
 def extract_info(userid, text):
     global result, prompt_unknown
-    # print("weeeeee")
-    # print(result)
-    # print(prompt_unknown)
+    print("weeeeee")
+    print(result)
+    print(prompt_unknown)
     if result != None and result in str(text[len(text)-1]).lower():
         result = None
         prompt_unknown = 0
