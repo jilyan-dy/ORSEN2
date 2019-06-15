@@ -233,7 +233,7 @@ def get_concept_like(relation, first="", second=""):
         cursor.execute(sql)
         # Fetch all the rows in a list of lists.
         result = cursor.fetchall()
-        print("result length", len(result))
+        print("LOCAL, LENGTH OF RESULT:", len(result))
 
         for row in result:
             id          = row[0]

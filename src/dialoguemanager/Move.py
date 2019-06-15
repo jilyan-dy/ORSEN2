@@ -1,19 +1,30 @@
 class Move:
 
-    def __init__(self, move_id=-1, response_type="", template=[], blanks=[], blank_index=[], type_num=-1, subject=None, concept_id=-1, dbtype = ""):
+    def __init__(self, 
+                move_id=-1, response_type="", template=[], relations =[], blanks=[], nodes=[], dependent_nodes=[], dict_nodes = {},
+                blank_index=[], type_num=-1, 
+                subject=None, concept_id=-1, dbtype = ""):
         self.move_id = move_id #ID template
-        self.type = type
-        self.template = template #response "I see, what happened next? etc" Naka list siya, hinahati by _start_
-        self.blanks = blanks
         self.response_type = response_type
+        self.template = template #response "I see, what happened next? etc" Naka list siya, hinahati by _start_
+        self.relations = relations
+        self.blanks = blanks
+        self.nodes = nodes
+        self.dependent_nodes = dependent_nodes
+        self.dict_nodes = dict_nodes
+
+        self.subject_type_list = [] #Appends the type of the subject
+        self.follow_up_relations = [] #Which local id was used + at which curr_blank
+        self.subjects_for_suggestion = [] #Appends all charas objects used
+
+        self.choices_relationID = []
+
+
+        #self.type = type
         self.blank_index = blank_index
         self.type_num = type_num #What type of dialogue move
         self.subject = subject
-        self.concept_id = concept_id #ID of which concept was used
-        self.dbtype = dbtype #local or global?
-
-        self.blank_dictionary_move = {}    
-        self.concept_letter = "Z"   
+        self.dbtype = dbtype #local or global?   Di ko ginagamit?  
 
     def fill_blank(self, fill):
         for i in range(0, len(fill)):
