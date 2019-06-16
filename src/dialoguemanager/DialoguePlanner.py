@@ -99,6 +99,7 @@ def retrieve_output(coreferenced_text, world_id, userid):
             if (last_response_type_num == MOVE_UNKNOWN and world.responses[len(world.responses)-3].type_num == MOVE_SUGGESTING):
                 prev_response = world.responses[len(world.responses)-1]
                 relation_list = prev_response.choices_relationID
+                coreferenced_text.upper() # Capitalizes the entire string
                 answer = coreferenced_text.split(" ") #Assuming answers are like this A and B or A B C. If like this ABC di gagana
 
                 for x in range(len(relation_list)):
@@ -271,12 +272,21 @@ def retrieve_output(coreferenced_text, world_id, userid):
     world.add_response(output)
     world.add_response_type_count(output)
 
-    #Header would be added
+    #Feedback would be added
     feedback_add = feedback_random(output.type_num)
     if feedback_add == 1 and category == CAT_STORY:
         feedback_output = generate_response(MOVE_FEEDBACK, world, [], coreferenced_text)
-        combination_response(output.type_num, world)
-        output.template.insert(0, feedback_output.get_string_response() + " ")
+        # print("OOF", feedback_output.get_string_response())
+        # prevents instances like, Oh so that's what happens, what happens next?
+        if "happens" in output.get_string_response() or "happened" in output.get_string_response():
+            if "happens" in feedback_output.get_string_response():
+                print("do nothing. No combination")
+            else:
+                combination_response(output.type_num, world)
+                output.template.insert(0, feedback_output.get_string_response() + " ")
+        else:
+            combination_response(output.type_num, world)
+            output.template.insert(0, feedback_output.get_string_response() + " ")
 
     return output
 
@@ -337,7 +347,9 @@ def generate_response(move_code, world, remove_index, text):
         choices = DBO_Move.get_templates_of_type(DBO_Move.TYPE_SPECIFIC_PUMP)
 
     elif move_code == MOVE_HINT:
-        choices = DBO_Move.get_templates_of_type(DBO_Move.TYPE_HINT)
+        #choices = DBO_Move.get_templates_of_type(DBO_Move.TYPE_HINT)
+        # Since same templates naman
+        choices = DBO_Move.get_templates_of_type(DBO_Move.TYPE_SUGGESTING)
     
     elif move_code == MOVE_SUGGESTING:
         choices = DBO_Move.get_templates_of_type(DBO_Move.TYPE_SUGGESTING)
@@ -352,10 +364,12 @@ def generate_response(move_code, world, remove_index, text):
         choice2 = random.randint(0, len(usable_concepts))
         if len(usable_concepts) > 0:
             move = choices[choice]
-            a = []
-            a.append(usable_concepts[choice2].first)
             #Change fill up for prompts
-            move.fill_blank(a)
+            # a = []
+            # a.append(usable_concepts[choice2].first)
+            # move.fill_blank(a)
+            a = usable_concepts[choice2].first
+            move.fill_blank_prompt(a)
 
             print("FINAL MOVE DECISION:")
             print(str(move))
@@ -363,7 +377,6 @@ def generate_response(move_code, world, remove_index, text):
 
     index_loop = 0
 
-    
     #This is where move was first initialize
     while True:
         index_loop += 1
@@ -376,8 +389,11 @@ def generate_response(move_code, world, remove_index, text):
             move.type_num = move_code
             break
 
+        if index_loop > 5:
+            exit(0)
         print("Loop count: ", index_loop)
         if index_loop > 20:
+            exit(0)
             remove_index.append(move.move_id)
             print("CHANGE MOVE")
 
@@ -396,11 +412,11 @@ def generate_response(move_code, world, remove_index, text):
     print("Generating fillable template...")
     print(str(move))
 
-    ''' DEBUUGING, UNCOMMENT THIS Force to choose suggesting
+    '''DEBUUGING, UNCOMMENT THIS Force to choose suggesting
     choices = DBO_Move.get_templates_of_type(DBO_Move.TYPE_SUGGESTING)
     move_code = MOVE_SUGGESTING
     
-    move = choices[0]
+    move = choices[1]
     move.type_num = move_code
 
     if len(world.responses) > 0:
@@ -415,7 +431,9 @@ def generate_response(move_code, world, remove_index, text):
     subject_suggest_list = [["" for x in range(0)] for y in range(len(move.dependent_nodes))]
 
     result_move = fill_up_response(move, world, 1, used_concept_list, subject_suggest_list, False)
+    # print("ASSASAS", result_move)
 
+    '''FILLS UP THE TEMPLATES'''
     if result_move != None:
         keys = [ k for k in result_move.dict_nodes]
         print(keys)
@@ -445,7 +463,7 @@ def fill_up_response(move, world, curr_blank, used_concept_list, subject_suggest
     dbtype = "L"
 
     print("curr_blank: ", curr_blank)
-
+    print(len(move.relations))
     if curr_blank == len(move.relations)+1:
         for x in range(len(move.blanks)):
             if move.blanks[x] in DATABASE_TYPE.RELATIONS:
@@ -482,6 +500,9 @@ def fill_up_response(move, world, curr_blank, used_concept_list, subject_suggest
 
         if move.dependent_nodes[curr_blank-1] == "None":
             return fill_up_response(move, world, curr_blank - 1, used_concept_list, subject_suggest_list, True)
+    
+    if move.blanks[0] == "None":
+        return fill_up_response(move, world, curr_blank + 1, used_concept_list, subject_suggest_list, True)
 
     blank_type = move.blanks[curr_blank-1]
 

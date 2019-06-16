@@ -26,9 +26,16 @@ class Move:
         self.subject = subject
         self.dbtype = dbtype #local or global?   Di ko ginagamit?  
 
+    '''
     def fill_blank(self, fill):
         for i in range(0, len(fill)):
-            self.template[self.blank_index[i]] = fill[i]
+            self.template[self.blank_index[i]] = fill[i]'''
+    
+    def fill_blank_prompt(self, fill):
+        for i in range(len(self.template)):
+            for j in range(len(self.nodes)):
+                if self.template[i] == self.nodes[j]:
+                    self.template[i] = fill
 
     def get_string_response(self):
         string = ""
