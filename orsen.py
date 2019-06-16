@@ -135,7 +135,8 @@ def orsen():
 			turn_count = turn_count + 2
 			# add to DB
 			user = User.User(-1, username, secret_code)
-			DBO_User.add_user(user)
+			if DBO_User.get_user_id(username, secret_code) == -1:
+				DBO_User.add_user(user)
 			# get user id
 			userid = DBO_User.get_user_id(username, secret_code)
 			data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Yey, a new friend! Let's make a story. You go first " + username + "."}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
@@ -147,8 +148,7 @@ def orsen():
 		# check if username and secret code match in db
 
 		userid = DBO_User.get_user_id(username, secret_code)
-		print("user id")
-		print(userid)
+		
 		if userid != -1:
 			turn_count = turn_count + 1
 			data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Oh, you remembered " + username + "! Okay, let's make a story then. You start!"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}

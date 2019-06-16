@@ -157,7 +157,7 @@ def retrieve_output(coreferenced_text, world_id, userid):
                         #If score exceeds, change assertion/concept type to global
                         if new_score >= SCORE_THRESHOLD:
                             DBO_Local_Concept.update_valid(last_response_concept_id, 0)
-                            #DBO_Concept.add_concept(Concept(local_concept.id, local_concept.first, local_concept.relation, local_concept.second))
+                            DBO_Concept.add_concept(Concept(local_concept.id, local_concept.first, local_concept.relation, local_concept.second))
 
                     #NEW RESPONSE
                     output = Move.Move(template=["Ok, let's keep going then!"], type_num=MOVE_UNKNOWN)
@@ -481,7 +481,7 @@ def generate_response(move_code, world, remove_index, text):
                         print("SUBJECT SUGGEST", subject)
                         decided_node = NODE_START
 
-                    if len(subject.type) > 0:
+                    if subject is not None and len(subject.type) > 0:
                         # decided_concept = subject.name[random.randint(0, len(subject.type))]
                         choice_index = random.randint(0, len(subject.type))
                         decided_concept = subject.type[choice_index]
@@ -534,7 +534,7 @@ def generate_response(move_code, world, remove_index, text):
                     # frog went to forest. 
                     # If not continous suggestion, it would get forest at the decided concept
                     # if continuous, and subject is frog then disregard this
-                    if world.continue_suggesting == 0 or world.subject_suggest.name in list_settings_names:
+                    if world.continue_suggesting == 0 or (world.subject_suggest is not None and world.subject_suggest.name in list_settings_names):
                         settings = world.settings
 
                         print("length settings", len(settings))
@@ -645,8 +645,9 @@ def generate_response(move_code, world, remove_index, text):
             if world.continue_suggesting == 1 and move_code == MOVE_SPECIFIC_PUMP:
                 subject = world.subject_suggest
 
-            move.template[move.template.index("object")] = subject.id
-            move.blank_dictionary_move["object"] = subject.id
+            if subject is not None:
+                move.template[move.template.index("object")] = subject.id
+                move.blank_dictionary_move["object"] = subject.id
 
         elif blank_type == "Item":
 
@@ -664,8 +665,9 @@ def generate_response(move_code, world, remove_index, text):
             if world.continue_suggesting == 1 and move_code == MOVE_SPECIFIC_PUMP:
                 subject = world.subject_suggest
 
-            move.template[move.template.index("item")] = subject.id
-            move.blank_dictionary_move["item"] = subject.id
+            if subject is not None:
+                move.template[move.template.index("item")] = subject.id
+                move.blank_dictionary_move["item"] = subject.id
 
         elif blank_type == "Character":
             if subject is None or not isinstance(subject, Character):
@@ -685,9 +687,10 @@ def generate_response(move_code, world, remove_index, text):
             if world.continue_suggesting == 1 and move_code == MOVE_SPECIFIC_PUMP:
                 subject = world.subject_suggest
 
-            subject_list.append(subject.id) #SUBJECT CELINA
-            move.template[move.template.index("character")] = subject.id
-            move.blank_dictionary_move["character"] = subject.id
+            if subject is not None:
+                subject_list.append(subject.id) #SUBJECT CELINA
+                move.template[move.template.index("character")] = subject.id
+                move.blank_dictionary_move["character"] = subject.id
 
         elif blank_type == "inSetting":
             if subject is None:
@@ -791,7 +794,7 @@ def header_text(move_code, move, world):
         header = random.choice(elements) 
         move.template.insert(0, header)
     
-    if world.continue_suggesting == 1 and move_code == MOVE_SPECIFIC_PUMP:
+    if world.continue_suggesting == 1 and move_code == MOVE_SPECIFIC_PUMP and world.subject_suggest is not None:
         move.template.insert(0, "I don't know much about " + world.subject_suggest.name + ". Please help me learn more. ")
         move.template.append("?")
 
