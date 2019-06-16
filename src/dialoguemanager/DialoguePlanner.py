@@ -463,7 +463,7 @@ def fill_up_response(move, world, curr_blank, used_concept_list, subject_suggest
                 elif move.blanks[x] == "Object":
                     temp = "Object"
                 move.subjects_for_suggestion.append([temp, subject_suggest_list[x][-1]])
-            
+
         return move
 
     elif curr_blank == 0:
@@ -855,7 +855,7 @@ def header_text(move_code, move, world):
         elements = ["Then ", "I think ", "Hmm, I think "]
         header = random.choice(elements) 
         move.template.insert(0, header)
-    
+        
     ''' CELINA -IDK, DON't UNCOMMENT THIS
     if world.continue_suggesting == 1 and move_code == MOVE_SPECIFIC_PUMP:
         move.template.insert(0, "I don't know much about " + world.subject_suggest[1].name + ". Please help me learn more. ")

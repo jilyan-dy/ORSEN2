@@ -189,7 +189,7 @@ def get_concept_like(relation, first="", second=""):
           "first," \
           "second " \
           "FROM concepts " \
-          "WHERE first LIKE '%"+first+"%' AND second LIKE '%"+second+"%' AND relation = '"+relation+"'"
+          "WHERE first LIKE '%\%s%' AND second LIKE '%\%s%' AND relation = %s"
 
     conn = SqlConnConcepts.get_connection()
     cursor = conn.cursor()
@@ -197,7 +197,7 @@ def get_concept_like(relation, first="", second=""):
     resulting = []
 
     try:
-        cursor.execute(sql)
+        cursor.execute(sql, (first, second, relation,))
         # Fetch all the rows in a list of lists.
         result = cursor.fetchall()
         print("GLOBAL, LENGTH OF RESULT:", len(result))
