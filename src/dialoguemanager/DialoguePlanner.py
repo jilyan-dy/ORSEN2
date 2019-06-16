@@ -396,6 +396,7 @@ def generate_response(move_code, world, remove_index, text):
     print("Generating fillable template...")
     print(str(move))
 
+    ''' DEBUUGING, UNCOMMENT THIS Force to choose suggesting
     choices = DBO_Move.get_templates_of_type(DBO_Move.TYPE_SUGGESTING)
     move_code = MOVE_SUGGESTING
     
@@ -408,7 +409,7 @@ def generate_response(move_code, world, remove_index, text):
         print(MOVE_SUGGESTING)
         if last_response_type_num == MOVE_UNKNOWN:
             move = choices[1]
-            move.type_num = move_code
+            move.type_num = move_code'''
     
     used_concept_list = [["" for x in range(0)] for y in range(len(move.dependent_nodes))]
     subject_suggest_list = [["" for x in range(0)] for y in range(len(move.dependent_nodes))]
