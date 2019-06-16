@@ -223,9 +223,6 @@ def retrieve_output(coreferenced_text, world_id, userid):
                         "talk" in coreferenced_text or \
                         ("give" in coreferenced_text and "hint" in coreferenced_text)
 
-            # is_pump = ("what" in coreferenced_text and \
-            #            ("say" in coreferenced_text or "next" in coreferenced_text or "talk" in coreferenced_text))
-
             is_either = "help" in coreferenced_text or \
                         "stuck" in coreferenced_text
             
@@ -275,12 +272,11 @@ def retrieve_output(coreferenced_text, world_id, userid):
     world.add_response_type_count(output)
 
     #Header would be added
-    '''
     feedback_add = feedback_random(output.type_num)
     if feedback_add == 1 and category == CAT_STORY:
         feedback_output = generate_response(MOVE_FEEDBACK, world, [], coreferenced_text)
         combination_response(output.type_num, world)
-        output.template.insert(0, feedback_output.get_string_response() + " ")'''
+        output.template.insert(0, feedback_output.get_string_response() + " ")
 
     return output
 
@@ -358,11 +354,11 @@ def generate_response(move_code, world, remove_index, text):
             move = choices[choice]
             a = []
             a.append(usable_concepts[choice2].first)
+            #Change fill up for prompts
             move.fill_blank(a)
 
             print("FINAL MOVE DECISION:")
             print(str(move))
-            move.subject = subject
             return move
 
     index_loop = 0
@@ -387,11 +383,11 @@ def generate_response(move_code, world, remove_index, text):
 
             # if wala mahanap sa suggesting
             if world.continue_suggesting == 1: 
-                # CELINA -IDK
+                # CELINA -IDK, don't uncomment the one below
                 # return generate_response(MOVE_SPECIFIC_PUMP, world, remove_index, text)
                 # UNCOMMENT
-                # output = Move.Move(template=["I don't know much about " + world.subject_suggest[1].name + ". Please help me learn by telling me more about " + world.subject_suggest[1].name + "."], type_num=MOVE_SPECIFIC_PUMP)
-                output = Move.Move(template=["I don't know much about " + world.subject_suggest[1] + ". Please help me learn by telling me more about " + world.subject_suggest[1] + "."], type_num=MOVE_SPECIFIC_PUMP)
+                output = Move.Move(template=["I don't know much about " + world.subject_suggest[1].name + ". Please help me learn by telling me more about " + world.subject_suggest[1].name + "."], type_num=MOVE_SPECIFIC_PUMP)
+                # output = Move.Move(template=["I don't know much about " + world.subject_suggest[1] + ". Please help me learn by telling me more about " + world.subject_suggest[1] + "."], type_num=MOVE_SPECIFIC_PUMP)
                 return output
 
             else:
@@ -408,11 +404,9 @@ def generate_response(move_code, world, remove_index, text):
 
     if len(world.responses) > 0:
         last_response_type_num = world.responses[len(world.responses)-1].type_num
-        print("SNSNSNS")
         print(last_response_type_num)
         print(MOVE_SUGGESTING)
         if last_response_type_num == MOVE_UNKNOWN:
-            print("SNSNSNSwqwq")
             move = choices[1]
             move.type_num = move_code
     
@@ -590,7 +584,8 @@ def fill_up_response(move, world, curr_blank, used_concept_list, subject_suggest
         objects = world.get_top_objects()
         list_choices = charas + objects
 
-        list_choices = ["cake"] #PUT THIS HERE, IF SA IBA CAUSES INFINITE LOOP. CELINA YOU DUMB
+        # DEBUUGING 
+        # list_choices = ["cake"] #PUT THIS HERE, IF SA IBA CAUSES INFINITE LOOP. CELINA YOU DUMB
         if world.continue_suggesting == 1 and world.subject_suggest != None:
             if world.subject_suggest[0] == "Object":
                 list_choices = [world.subject_suggest[1]]
@@ -600,8 +595,8 @@ def fill_up_response(move, world, curr_blank, used_concept_list, subject_suggest
 
         blacklist = used_concept_list[curr_blank-1] + list(move.dict_nodes.values())
         for x in range(len(list_choices)):
-            #if list_choices[x].id in blacklist: <-uncomment this after
-            if list_choices[x] in blacklist:
+            if list_choices[x].id in blacklist: #<-uncomment this after
+            # DEBUUGING if list_choices[x] in blacklist:
                 temp_index.append(x)
         
         temp_index.sort()
@@ -614,27 +609,28 @@ def fill_up_response(move, world, curr_blank, used_concept_list, subject_suggest
         if len(list_choices) > 0:
             choice_index = random.randint(0, len(list_choices))
             subject = list_choices[choice_index]
-            #subject_list.append(subject) #SUBJECT CELINA
 
-            '''
+            # DEBUUGING, COMMENT THIS OUT
             if len(subject.type) > 0:  
                 choice_index = random.randint(0, len(subject.type))
                 decided_subject = subject.type[choice_index]
                 print("SUBJECT TYPE: ", decided_subject)
 
                 move.subject_type_list.append([curr_blank, decided_subject])
-            '''
-            ''' CELINA - IDK
+
+            ''' CELINA - IDK, DON'T UNCOMMENT
             if world.continue_suggesting == 1 and move_code == MOVE_SPECIFIC_PUMP:
                 subject = world.subject_suggest[1]'''
-            '''
+            
+            # DEBUUGING, COMMENT THIS OUT
             move.dict_nodes[str(curr_blank)] = subject.id
-            used_concept_list[curr_blank-1].append(subject.id)'''
+            used_concept_list[curr_blank-1].append(subject.id)
 
-            subject_suggest_list[curr_blank-1].append(subject)
+            subject_suggest_list[curr_blank-1].append(subject) #Maintain this
 
+            ''' DEBUUGING, UNCOMMENT THIS
             move.dict_nodes[str(curr_blank)] = subject
-            used_concept_list[curr_blank-1].append(subject)
+            used_concept_list[curr_blank-1].append(subject)'''
             
             return fill_up_response(move, world, curr_blank + 1, used_concept_list, subject_suggest_list, False)
         else:
@@ -666,7 +662,7 @@ def fill_up_response(move, world, curr_blank, used_concept_list, subject_suggest
             choice_index = random.randint(0, len(objects))
             subject = objects[choice_index]
       
-            ''' CELINA - IDK
+            ''' CELINA - IDK  DON'T UNCOMMENT
             if world.continue_suggesting == 1 and move_code == MOVE_SPECIFIC_PUMP:
                 subject = world.subject_suggest[1] '''
 
@@ -675,14 +671,13 @@ def fill_up_response(move, world, curr_blank, used_concept_list, subject_suggest
             subject_suggest_list[curr_blank-1].append(subject)
             
             return fill_up_response(move, world, curr_blank + 1, used_concept_list, subject_suggest_list, False)
-            #subject_list.append(subject) #SUBJECT CELINA
         else:
            return fill_up_response(move, world, curr_blank - 1, used_concept_list, subject_suggest_list, True)
     
     elif blank_type == "Character":
         charas = world.get_top_characters(5)
 
-        charas = ["dog"]
+        # DEBUUGING, UNCOMMENT THIS charas = ["dog"]
         if world.continue_suggesting == 1 and world.subject_suggest != None:
             if world.subject_suggest[0] == "Character":
                 list_choices = [world.subject_suggest[1]]
@@ -705,29 +700,29 @@ def fill_up_response(move, world, curr_blank, used_concept_list, subject_suggest
         if len(charas) > 0:
             choice_index = random.randint(0, len(charas))
             subject = charas[choice_index]
-            '''
+            
+            # DEBUUGING, COMMENT THIS OUT
             if len(subject.type) > 0:  
                 choice_index = random.randint(0, len(subject.type))
                 decided_subject = subject.type[choice_index]
                 print("SUBJECT TYPE: ", decided_subject)
 
                 move.subject_type_list.append([curr_blank, decided_subject])
-            '''
-            ''' CELINA - IDK
+            
+            ''' CELINA - IDK, DON'T UNCOMMENT THIS
             if world.continue_suggesting == 1 and move_code == MOVE_SPECIFIC_PUMP:
                 subject = world.subject_suggest[1] '''
             
-            '''
             move.dict_nodes[str(curr_blank)] = subject.id
             used_concept_list[curr_blank-1].append(subject.id)
-            '''
+            
             subject_suggest_list[curr_blank-1].append(subject)
             
+            ''' DEBUUGING, UNCOMMENT THIS
             move.dict_nodes[str(curr_blank)] = subject
-            used_concept_list[curr_blank-1].append(subject)
+            used_concept_list[curr_blank-1].append(subject)'''
             
             return fill_up_response(move, world, curr_blank + 1, used_concept_list, subject_suggest_list, False)
-            #subject_list.append(subject) #SUBJECT CELINA
         else:
            return fill_up_response(move, world, curr_blank - 1, used_concept_list, subject_suggest_list, True)
 
@@ -860,7 +855,7 @@ def header_text(move_code, move, world):
         header = random.choice(elements) 
         move.template.insert(0, header)
     
-    ''' CELINA -IDK
+    ''' CELINA -IDK, DON't UNCOMMENT THIS
     if world.continue_suggesting == 1 and move_code == MOVE_SPECIFIC_PUMP:
         move.template.insert(0, "I don't know much about " + world.subject_suggest[1].name + ". Please help me learn more. ")
         move.template.append("?")'''
@@ -885,10 +880,9 @@ def get_follow_up_string(prev_response):
 def suggest_again(world, coreferenced_text):
     if world.suggest_continue_count == 3:
         world.suggest_continue_count = 0
-        # UNCOMMENT
-        #output = Move.Move(template=["I don't know much about " + world.subject_suggest[1].name + ". Please help me learn by telling me more about " + world.subject_suggest[1].name + "."], type_num=MOVE_SPECIFIC_PUMP)
-        output = Move.Move(template=["I don't know much about " + world.subject_suggest[1] + ". Please help me learn by telling me more about " + world.subject_suggest[1] + "."], type_num=MOVE_SPECIFIC_PUMP)
-        # CELINA - IDK
+        output = Move.Move(template=["I don't know much about " + world.subject_suggest[1].name + ". Please help me learn by telling me more about " + world.subject_suggest[1].name + "."], type_num=MOVE_SPECIFIC_PUMP)
+        # DEBUUGING output = Move.Move(template=["I don't know much about " + world.subject_suggest[1] + ". Please help me learn by telling me more about " + world.subject_suggest[1] + "."], type_num=MOVE_SPECIFIC_PUMP)
+        # CELINA - IDK, DON'T UNOCOMMENT THIS
         # choice = MOVE_SPECIFIC_PUMP
         # output = generate_response(choice, world, [], coreferenced_text)
                 
