@@ -40,7 +40,7 @@ username = ""
 secret_code = ""
 
 #FOR FILES
-path ="D:/Desktop/Jilyan/Academics/College/THESIS/Conversation Logs"
+path ="C:/Users/ruby/Desktop/Thesis/ORSEN/Conversation Logs"
 date = datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 
 def main_intent():
@@ -260,13 +260,9 @@ def orsen():
 	
 			print("I: ", rawTextQuery)
 			print("O: ", output_reply)
-			#print(datetime.now())
-			#path ="C:/Users/ruby/Desktop/Thesis/ORSEN/Conversation Logs"
-			#date = datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")
-			#fileWriter = open(path+ "/" + date+".txt", "w")
+
 			fileWriter.write("Child: " + rawTextQuery + "\n")
 			fileWriter.write("ORSEN: " + output_reply + "\n")
-			#fileWriter.close()
 	
 	
 	#if expectedUserResponse is false, change storyId
