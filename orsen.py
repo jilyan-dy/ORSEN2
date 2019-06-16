@@ -77,7 +77,8 @@ def orsen():
 		#greet user (app.ask)
 		data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Hi! What's your name?"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
         
-		#FOR FILES
+		#FOR 
+		fileWriter.write(date)
 		fileWriter.write("ORSEN: Hi! What's your name?" + "\n")
 
 	elif focus["intent"] == "actions.intent.GIVE_IDEA_ORSEN":
@@ -222,6 +223,8 @@ def orsen():
 				#FOR FILES - CLOSE
 				fileWriter.write("CHILD: "+ rawTextQuery + "\n")
 				fileWriter.write("ORSEN: Thank you. Goodbye" + "\n")
+				end = datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+				fileWriter.write(end)
 				fileWriter.close()
 				
 		#when the user says they want to stop telling the story

@@ -221,12 +221,34 @@ nodes = "3,1,2"
 #dependent_node = "None,1,None,3"
 dependent_node = "3,1,2,None"'''
 
+'''
 template = "_1_ _2_ the _3_"
 relation = "1 Character, 1 CapableOf 2, 3 Object, 3 ReceivedAction 2"
 blank = "Character,CapableOf,Object,ReceivedAction"
 nodes = "1,2,3"
 #dependent_node = "None,1,None,3"
-dependent_node = "1,2,3,None"
+dependent_node = "1,2,3,None"'''
+
+'''
+template = "_1_ skies"
+relation = "1 IsA place"
+blank = "IsA"
+nodes = "1"
+#dependent_node = "None,1,None,3"
+dependent_node = "1"'''
+
+'''
+template = "_1_ wanted to _2_ during the _3_ _4_"
+relation = "1 Character, 1 CapableOf 2, 4 IsA weather, 3 HasProperty 4"
+blank = "Character,CapableOf,IsA,HasPropterty"
+nodes = "1,2,3,4"
+dependent_node = "1,2,3,4"'''
+
+template = "_1_ is a _2_ and it can _3_"
+relation = "1 Character, 1 IsA 2, 1 CapableOf 3"
+blank = "Character,IsA,CapableOf"
+nodes = "1,2,3"
+dependent_node = "1,2,3"
 
 '''
 template = "_1_ skies"
