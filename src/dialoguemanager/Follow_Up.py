@@ -1,13 +1,13 @@
 class Follow_Up:
 
-    def __init__(self, id, template_id , follow_up_template, concept_letter):
+    def __init__(self, id, template_id , follow_up_template):
         self.id = id
         self.template_id = template_id 
         self.follow_up_template = follow_up_template
-        self.concept_letter = concept_letter
     
-        self.blank_dictionary = {}
-        self.blank_template = []
+        self.final_template_list = [] #For follow up, Ex. person can eat
+        self.choices_relationID = []
+        self.start = 65
 
         self.final_response = ""
     
@@ -15,38 +15,28 @@ class Follow_Up:
         print("id: ", self.id)
         print("template_id: ", self.template_id)
         print("follow_up_template: ", self.follow_up_template)
-        print("concept letter: ", self.concept_letter)
     
-    def split_template(self):
-        for word in self.follow_up_template:
-            temp = word.split("_")
-            self.blank_template.append(temp)
-    
-    def fill_blank_template(self):
-        blanks = list(self.blank_dictionary.keys())
+    def fill_blank_template(self, follow_up_relations, dict_nodes):
+        for x in range(len(follow_up_relations)):
+            temp = self.follow_up_template[follow_up_relations[x][0]]
+            self.final_template_list.append([chr(self.start) + ". ", dict_nodes[temp[0]], temp[1], dict_nodes[temp[2]]])
+            self.choices_relationID.append([chr(self.start), follow_up_relations[x][1]])
 
-        for i in range(len(self.blank_template)):
-            for j in range (len(self.blank_template[i])):
-                if self.blank_template[i][j] in blanks:
-                    self.blank_template[i][j] = self.blank_dictionary[self.blank_template[i][j]]
+            self.start = self.start + 1
     
     def get_string_template(self):
-        for i in range(len(self.blank_template)):
-            for j in range (len(self.blank_template[i])):
-                self.final_response += self.blank_template[i][j]
+        for x in range(len(self.final_template_list)):
+            for y in range (len(self.final_template_list[x])):
+                self.final_response += self.final_template_list[x][y]
+
+            self.final_response += " ||| "
             
-            if i != len(self.blank_template)-1:
-                self.final_response += " ||| "
+            if x == len(self.final_template_list)-1:
+                self.final_response += chr(self.start) + ". None of the Above"
         
-        return self.final_response 
+        return self.final_response
+
     
-    '''
-    def get_string_template(self):
-    for i in range(len(self.blank_template)):
-        temp = ""
-        for j in range (len(self.blank_template[i])):
-            emp += self.blank_template[i][j]
-        print(temp)
-    '''
+
                 
 

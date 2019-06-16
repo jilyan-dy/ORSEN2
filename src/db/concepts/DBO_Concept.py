@@ -200,6 +200,7 @@ def get_concept_like(relation, first="", second=""):
         cursor.execute(sql, (first, second, relation,))
         # Fetch all the rows in a list of lists.
         result = cursor.fetchall()
+        print("GLOBAL, LENGTH OF RESULT:", len(result))
 
         id = -1
         relation = ""

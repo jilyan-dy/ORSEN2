@@ -37,8 +37,7 @@ class World:
         # For suggestion
         self.continue_suggesting = 0 #1 means yes continue to suggest. #0 means no
         self.suggest_continue_count = 0
-        self.subject_suggest = None
-        self.node_pos = -1
+        self.subject_suggest = None #[Object, Object - Dog]
 
         
         #responses count
