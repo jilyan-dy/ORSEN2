@@ -244,11 +244,18 @@ blank = "Character,CapableOf,IsA,HasPropterty"
 nodes = "1,2,3,4"
 dependent_node = "1,2,3,4"'''
 
-template = "_1_ is a _2_ and it can _3_"
-relation = "1 Character, 1 IsA 2, 1 CapableOf 3"
-blank = "Character,IsA,CapableOf"
+template = "Then on _1_, _2_ used_ _3_ for _4_."
+relation = "1 IsA day, 2 Character, 3 Object, 3 UsedFor 4, 2 CapableOf 4"
+blank = "IsA,Character,Object,UsedFor,CapableOf"
+nodes = "1,2,3,4"
+dependent_node = "1,2,3,4,None"
+
+template = "_1_ went to the _2_ to _3_"
+relation = "1 Character, 1 AtLocation 2, 2 UsedFor 3"
+blank = "Character,AtLocation,UsedFor"
 nodes = "1,2,3"
 dependent_node = "1,2,3"
+
 
 '''
 template = "_1_ skies"
