@@ -40,7 +40,7 @@ username = ""
 secret_code = ""
 
 #FOR FILES
-path ="C:/Users/ruby/Desktop/Thesis/ORSEN/Conversation Logs"
+path ="D:/Desktop/Jilyan/Academics/College/THESIS/Conversation Logs"
 date = datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 
 def main_intent():
@@ -228,7 +228,7 @@ def orsen():
 				fileWriter.close()
 				
 		#when the user says they want to stop telling the story
-		elif rawTextQuery == "bye" or rawTextQuery == "the end" or rawTextQuery == "the end.":
+		elif rawTextQuery.lower() == "bye" or rawTextQuery.lower() == "the end" or rawTextQuery.lower() == "the end.":
 			#(edit-addhearstory-p1) changed the prompt from 'create another story' to 'hear full story'
 			data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Wow. Thanks for the story. Do you want to hear the full story?"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
 			endstory = True
