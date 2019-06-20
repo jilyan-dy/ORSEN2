@@ -389,11 +389,11 @@ def generate_response(move_code, world, remove_index, text):
             move.type_num = move_code
             break
 
-        if index_loop > 5:
-            exit(0)
+        '''if index_loop > 5:
+            exit(0)'''
         print("Loop count: ", index_loop)
         if index_loop > 20:
-            exit(0)
+            '''exit(0)'''
             remove_index.append(move.move_id)
             print("CHANGE MOVE")
 
@@ -708,8 +708,8 @@ def fill_up_response(move, world, curr_blank, used_concept_list, subject_suggest
         temp_index = []
         blacklist = used_concept_list[curr_blank-1] + list(move.dict_nodes.values())
         for x in range(len(charas)):
-            #if charas[x].id in blacklist:
-            if charas[x] in blacklist:
+            if charas[x].id in blacklist:
+            #if charas[x] in blacklist:
                 temp_index.append(x)
         
         temp_index.sort()

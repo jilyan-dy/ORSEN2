@@ -119,8 +119,8 @@ def details_extraction(sent, world, current_node, subj="", neg="", text=""):
                 sent.finished_nodes[i] = 1
                 break
 
-    if (current_node == "ROOT") and (sent.pos[i] in ["NOUN", "PROPN"]):
-        add_objects(sent, sent.text_token[i], sent.dep[i], sent.lemma[i], world)
+            if (current_node == "ROOT") and (sent.pos[i] in ["NOUN", "PROPN"]):
+                add_objects(sent, sent.text_token[i], sent.dep[i], sent.lemma[i], world)
 
     if neg == "":
         is_negated = False
