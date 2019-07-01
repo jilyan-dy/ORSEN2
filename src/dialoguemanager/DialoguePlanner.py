@@ -389,11 +389,11 @@ def generate_response(move_code, world, remove_index, text):
             move.type_num = move_code
             break
 
-        if index_loop > 5:
-            exit(0)
+        '''if index_loop > 5:
+            exit(0)'''
         print("Loop count: ", index_loop)
         if index_loop > 20:
-            exit(0)
+            '''exit(0)'''
             remove_index.append(move.move_id)
             print("CHANGE MOVE")
 
@@ -481,7 +481,7 @@ def fill_up_response(move, world, curr_blank, used_concept_list, subject_suggest
                 elif move.blanks[x] == "Object":
                     temp = "Object"
                 move.subjects_for_suggestion.append([temp, subject_suggest_list[x][-1]])
-            
+
         return move
 
     elif curr_blank == 0:
@@ -708,8 +708,8 @@ def fill_up_response(move, world, curr_blank, used_concept_list, subject_suggest
         temp_index = []
         blacklist = used_concept_list[curr_blank-1] + list(move.dict_nodes.values())
         for x in range(len(charas)):
-            #if charas[x].id in blacklist:
-            if charas[x] in blacklist:
+            if charas[x].id in blacklist:
+            #if charas[x] in blacklist:
                 temp_index.append(x)
         
         temp_index.sort()
@@ -876,7 +876,7 @@ def header_text(move_code, move, world):
         elements = ["Then ", "I think ", "Hmm, I think "]
         header = random.choice(elements) 
         move.template.insert(0, header)
-    
+        
     ''' CELINA -IDK, DON't UNCOMMENT THIS
     if world.continue_suggesting == 1 and move_code == MOVE_SPECIFIC_PUMP:
         move.template.insert(0, "I don't know much about " + world.subject_suggest[1].name + ". Please help me learn more. ")

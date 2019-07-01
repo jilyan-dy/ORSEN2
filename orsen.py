@@ -40,7 +40,7 @@ username = ""
 secret_code = ""
 
 #FOR FILES
-path ="C:/Users/ruby/Desktop/Thesis/ORSEN/Conversation Logs"
+path ="D:/Desktop/Jilyan/Academics/College/THESIS/Conversation Logs"
 date = datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 
 def main_intent():
@@ -136,7 +136,8 @@ def orsen():
 			turn_count = turn_count + 2
 			# add to DB
 			user = User.User(-1, username, secret_code)
-			DBO_User.add_user(user)
+			if DBO_User.get_user_id(username, secret_code) == -1:
+				DBO_User.add_user(user)
 			# get user id
 			userid = DBO_User.get_user_id(username, secret_code)
 			data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Yey, a new friend! Let's make a story. You go first " + username + "."}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
@@ -148,8 +149,7 @@ def orsen():
 		# check if username and secret code match in db
 
 		userid = DBO_User.get_user_id(username, secret_code)
-		print("user id")
-		print(userid)
+		
 		if userid != -1:
 			turn_count = turn_count + 1
 			data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Oh, you remembered " + username + "! Okay, let's make a story then. You start!"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
@@ -228,7 +228,7 @@ def orsen():
 				fileWriter.close()
 				
 		#when the user says they want to stop telling the story
-		elif rawTextQuery == "bye" or rawTextQuery == "the end" or rawTextQuery == "the end.":
+		elif rawTextQuery.lower() == "bye" or rawTextQuery.lower() == "the end" or rawTextQuery.lower() == "the end.":
 			#(edit-addhearstory-p1) changed the prompt from 'create another story' to 'hear full story'
 			data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Wow. Thanks for the story. Do you want to hear the full story?"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
 			endstory = True
