@@ -40,7 +40,7 @@ username = ""
 secret_code = ""
 
 #FOR FILES
-path ="D:/Desktop/Jilyan/Academics/College/THESIS/Conversation Logs"
+path ="C:/Users/ruby/Desktop/Thesis/ORSEN/Conversation Logs"
 date = datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 
 def main_intent():

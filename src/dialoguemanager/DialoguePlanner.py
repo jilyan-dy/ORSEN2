@@ -99,7 +99,7 @@ def retrieve_output(coreferenced_text, world_id, userid):
             if (last_response_type_num == MOVE_UNKNOWN and world.responses[len(world.responses)-3].type_num == MOVE_SUGGESTING):
                 prev_response = world.responses[len(world.responses)-1]
                 relation_list = prev_response.choices_relationID
-                coreferenced_text.upper() # Capitalizes the entire string
+                coreferenced_text = coreferenced_text.upper() # Capitalizes the entire string
                 answer = coreferenced_text.split(" ") #Assuming answers are like this A and B or A B C. If like this ABC di gagana
 
                 for x in range(len(relation_list)):
@@ -143,6 +143,8 @@ def retrieve_output(coreferenced_text, world_id, userid):
                 output = Move.Move(template=["Ok, let's keep going then!"], type_num=MOVE_UNKNOWN)
             
             if last_response_type_num == MOVE_SUGGESTING:
+                coreferenced_text = coreferenced_text.lower()
+
                 if "yes" in coreferenced_text:
                     world.continue_suggesting = 0
                     world.suggest_continue_count = 0
@@ -179,7 +181,8 @@ def retrieve_output(coreferenced_text, world_id, userid):
                     output = Move.Move(template=["Sorry, I don't understand. Please answer by yes or no"], type_num=MOVE_UNKNOWN)
 
             elif last_response_type_num == MOVE_UNKNOWN and world.continue_suggesting == 1:  
-
+                coreferenced_text = coreferenced_text.lower()
+                
                 if "don't like" in coreferenced_text or "dont like" in coreferenced_text:
                     # Suggest again?
                     output = suggest_again(world, coreferenced_text)
@@ -219,7 +222,8 @@ def retrieve_output(coreferenced_text, world_id, userid):
         elif category == CAT_COMMAND:
             # TEMP TODO: check for further commands
             choice = random.randint(MOVE_FEEDBACK, MOVE_SPECIFIC_PUMP+1)
-
+            
+            '''
             is_hint = "your turn" in coreferenced_text or \
                         "talk" in coreferenced_text or \
                         ("give" in coreferenced_text and "hint" in coreferenced_text)
@@ -231,6 +235,11 @@ def retrieve_output(coreferenced_text, world_id, userid):
                             ("give" in coreferenced_text and "idea" in coreferenced_text) or \
                             "what happens next" in coreferenced_text or \
                             "trial" in coreferenced_text
+            '''
+            is_hint = "hint" in coreferenced_text
+            is_suggesting = "suggest" in coreferenced_text or \
+                        "help" in coreferenced_text or \
+                        "stuck" in coreferenced_text
 
             if "help me start" in coreferenced_text:
                 output = generate_response(MOVE_PROMPT, world, [], coreferenced_text)
@@ -243,7 +252,6 @@ def retrieve_output(coreferenced_text, world_id, userid):
                 choice = random.randint(MOVE_GENERAL_PUMP, MOVE_HINT+1) #between suggesting and hinting
             elif is_hint:
                 choice = MOVE_HINT
-            
             elif is_suggesting:
                 choice = MOVE_SUGGESTING
 
@@ -360,6 +368,7 @@ def generate_response(move_code, world, remove_index, text):
     elif move_code == MOVE_PROMPT:
         choices = DBO_Move.get_templates_of_type("prompt")
         usable_concepts = DATABASE_TYPE.get_concept_like("IsA", second="role")
+        print("ASAKA", len(usable_concepts))
         choice = random.randint(0, len(choices))
         choice2 = random.randint(0, len(usable_concepts))
         if len(usable_concepts) > 0:
@@ -594,8 +603,10 @@ def fill_up_response(move, world, curr_blank, used_concept_list, subject_suggest
       
             result = [key for key, values in rev_dict.items() 
                                         if len(values) > 1] 
+                                        
             if len(result) > 0:
-                return fill_up_response(move, world, curr_blank, used_concept_list, subject_suggest_list, False)
+                if result[0] != "":
+                    return fill_up_response(move, world, curr_blank, used_concept_list, subject_suggest_list, False)
             
             #END - AVOID USING THE SAME NODE IN ONE SENTENCE
 
@@ -645,13 +656,15 @@ def fill_up_response(move, world, curr_blank, used_concept_list, subject_suggest
                 subject = world.subject_suggest[1]'''
             
             # DEBUUGING, COMMENT THIS OUT
-            move.dict_nodes[str(curr_blank)] = subject.id
+            #move.dict_nodes[str(curr_blank)] = subject.id
+            move.dict_nodes[num_nodes[curr_blank-1]] = subject.id
             used_concept_list[curr_blank-1].append(subject.id)
 
             subject_suggest_list[curr_blank-1].append(subject) #Maintain this
 
             ''' DEBUUGING, UNCOMMENT THIS
-            move.dict_nodes[str(curr_blank)] = subject
+            #move.dict_nodes[str(curr_blank)] = subject
+            move.dict_nodes[num_nodes[curr_blank-1]] = subject
             used_concept_list[curr_blank-1].append(subject)'''
             
             return fill_up_response(move, world, curr_blank + 1, used_concept_list, subject_suggest_list, False)
@@ -688,7 +701,8 @@ def fill_up_response(move, world, curr_blank, used_concept_list, subject_suggest
             if world.continue_suggesting == 1 and move_code == MOVE_SPECIFIC_PUMP:
                 subject = world.subject_suggest[1] '''
 
-            move.dict_nodes[str(curr_blank)] = subject.id
+            #move.dict_nodes[str(curr_blank)] = subject.id
+            move.dict_nodes[num_nodes[curr_blank-1]] = subject.id
             used_concept_list[curr_blank-1].append(subject.id)
             subject_suggest_list[curr_blank-1].append(subject)
             
@@ -735,13 +749,15 @@ def fill_up_response(move, world, curr_blank, used_concept_list, subject_suggest
             if world.continue_suggesting == 1 and move_code == MOVE_SPECIFIC_PUMP:
                 subject = world.subject_suggest[1] '''
             
-            move.dict_nodes[str(curr_blank)] = subject.id
+            #move.dict_nodes[str(curr_blank)] = subject.id
+            move.dict_nodes[num_nodes[curr_blank-1]] = subject.id
             used_concept_list[curr_blank-1].append(subject.id)
             
             subject_suggest_list[curr_blank-1].append(subject)
             
             ''' DEBUUGING, UNCOMMENT THIS
-            move.dict_nodes[str(curr_blank)] = subject
+            #move.dict_nodes[str(curr_blank)] = subject
+            move.dict_nodes[num_nodes[curr_blank-1]] = subject
             used_concept_list[curr_blank-1].append(subject)'''
             
             return fill_up_response(move, world, curr_blank + 1, used_concept_list, subject_suggest_list, False)
@@ -750,7 +766,8 @@ def fill_up_response(move, world, curr_blank, used_concept_list, subject_suggest
 
     elif blank_type == "Repeat":
         if len(world.event_chain) > 0:
-            move.dict_nodes[str(curr_blank)] = to_sentence_string(world.event_chain[len(world.event_chain)-1])
+            #move.dict_nodes[str(curr_blank)] = to_sentence_string(world.event_chain[len(world.event_chain)-1])
+            move.dict_nodes[num_nodes[curr_blank-1]] = to_sentence_string(world.event_chain[len(world.event_chain)-1])
             return fill_up_response(move, world, curr_blank + 1, used_concept_list, subject_suggest_list, False)
         else:
             return fill_up_response(move, world, curr_blank - 1, used_concept_list, subject_suggest_list, True)
@@ -759,19 +776,25 @@ def fill_up_response(move, world, curr_blank, used_concept_list, subject_suggest
     elif blank_type == "Pronoun":
         subject = None #object, character
         if subject is None:
-            move.dict_nodes[str(curr_blank)] = "it"
+            #move.dict_nodes[str(curr_blank)] = "it"
+            move.dict_nodes[num_nodes[curr_blank-1]] = "it"
             return fill_up_response(move, world, curr_blank + 1, used_concept_list, subject_suggest_list, False)
         else:
             if isinstance(subject, Object):
-                move.dict_nodes[str(curr_blank)] = "they"
+                #move.dict_nodes[str(curr_blank)] = "they"
+                move.dict_nodes[num_nodes[curr_blank-1]] = "they"
             elif subject.gender == "":
-                move.dict_nodes[str(curr_blank)] = "they"
+                #move.dict_nodes[str(curr_blank)] = "they"
+                move.dict_nodes[num_nodes[curr_blank-1]] = "they"
             elif subject.gender == "M":
-                move.dict_nodes[str(curr_blank)] = "he"
+                #move.dict_nodes[str(curr_blank)] = "he"
+                move.dict_nodes[num_nodes[curr_blank-1]] = "he"
             elif subject.gender == "F":
-                move.dict_nodes[str(curr_blank)] = "she"
+                #move.dict_nodes[str(curr_blank)] = "she"
+                move.dict_nodes[num_nodes[curr_blank-1]] = "she"
             else:
-                move.dict_nodes[str(curr_blank)] = subject.name
+                #move.dict_nodes[str(curr_blank)] = subject.name
+                move.dict_nodes[num_nodes[curr_blank-1]] = subject.name
             
             return fill_up_response(move, world, curr_blank + 1, used_concept_list, subject_suggest_list, False)
         
@@ -785,7 +808,8 @@ def fill_up_response(move, world, curr_blank, used_concept_list, subject_suggest
             
             if event.event_type == FRAME_EVENT:
                 if event.action != "":
-                    move.dict_nodes[str(curr_blank)] = get_subject_string(event) + " " + event.action
+                    #move.dict_nodes[str(curr_blank)] = get_subject_string(event) + " " + event.action
+                    move.dict_nodes[num_nodes[curr_blank-1]] = get_subject_string(event) + " " + event.action
                     return fill_up_response(move, world, curr_blank + 1, used_concept_list, subject_suggest_list, False)
 
             loop_back -= 1
