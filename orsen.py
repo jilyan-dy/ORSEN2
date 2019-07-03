@@ -40,7 +40,8 @@ username = ""
 secret_code = ""
 
 #FOR FILES
-path ="D:/Desktop/Jilyan/Academics/College/THESIS/Conversation Logs"
+convo_path ="D:/Desktop/Jilyan/Academics/College/THESIS/Conversation Logs"
+back_path ="D:/Desktop/Jilyan/Academics/College/THESIS/Information Extraction Logs"
 date = datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 
 def main_intent():
@@ -63,7 +64,9 @@ def orsen():
 	#print(focus["intent"])
     
     #FOR FILES - OPEN
-	fileWriter = open(path+ "/" + date+".txt", "a")
+	convo_fileWriter = open(convo_path+ "/" + date+".txt", "a")
+	ie_fileWriter = open(back_path+ "/" + date+".txt", "a")
+
 	
 	#When the app invocation starts, create storyid and greet the user and reset reprompt count
 	if focus["intent"] == "actions.intent.MAIN":
@@ -78,14 +81,15 @@ def orsen():
 		data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Hi! What's your name?"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
         
 		#FOR 
-		fileWriter.write(date)
-		fileWriter.write("ORSEN: Hi! What's your name?" + "\n")
+		convo_fileWriter.write(date + "\n")
+		ie_fileWriter.write(date + "\n")
+		convo_fileWriter.write("ORSEN: Hi! What's your name?" + "\n")
 
 	elif focus["intent"] == "actions.intent.GIVE_IDEA_ORSEN":
 		data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Okay, I will give you a hint"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
         
         #FOR FILES
-		fileWriter.write("ORSEN: Okay, I will give you a hint" + "\n")
+		convo_fileWriter.write("ORSEN: Okay, I will give you a hint" + "\n")
 	
 	
 	#When there is no input: ask the user (prompt from model) until maximum count is reached 
@@ -97,8 +101,10 @@ def orsen():
 			data = {"expectUserResponse": False, "finalResponse": {"speechResponse": {"textToSpeech": "Okay. Goodbye"}}}
             
 			#FOR FILES - CLOSE
-			fileWriter.write("ORSEN: Okay. Goodbye" + "\n")
-			fileWriter.close()
+			convo_fileWriter.write("ORSEN: Okay. Goodbye" + "\n")
+			convo_fileWriter.close()
+			ie_fileWriter.write("~~~ Story Ends Because of No Input ~~~" + "\n")
+			ie_fileWriter.close()
 
 		#reprompt user
 		else:
@@ -117,6 +123,8 @@ def orsen():
 		turn_count = turn_count + 1
 		username = str(rawTextQuery).split()
 		username = username[len(username)-1].lower()
+		convo_fileWriter.write("CHILD: My name is" + username + "\n")
+		ie_fileWriter.write("Child name is " + username + "\n")
 		data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Do we have a secret code?"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
 		
 	elif turn_count == 2:
@@ -181,8 +189,8 @@ def orsen():
 				endstorygen = True
                 
 				#FOR FILES
-				fileWriter.write("CHILD: "+ rawTextQuery + "\n")
-				fileWriter.write("ORSEN: "+ output_reply + "Do you want to create another story?" + "\n")
+				convo_fileWriter.write("CHILD: "+ rawTextQuery + "\n")
+				convo_fileWriter.write("ORSEN: "+ output_reply + "Do you want to create another story?" + "\n")
 			
 			# user does not want to hear the full story
 			elif not endstorygen:
@@ -191,8 +199,8 @@ def orsen():
 				endstorygen = True
                 
 				#FOR FILES
-				fileWriter.write("CHILD: "+ rawTextQuery + "\n")
-				fileWriter.write("ORSEN: Okay. Do you want to create another story?" + "\n")
+				convo_fileWriter.write("CHILD: "+ rawTextQuery + "\n")
+				convo_fileWriter.write("ORSEN: Okay. Do you want to create another story?" + "\n")
 				
 			# user wants to create a new story
 			elif endstorygen and (rawTextQuery == "yes" or rawTextQuery == "yes." or rawTextQuery == "sure" or rawTextQuery == "sure." or rawTextQuery == "yeah" or rawTextQuery == "yeah."):
@@ -208,8 +216,8 @@ def orsen():
 				turn_count = 0
                 
 				#FOR FILES
-				fileWriter.write("CHILD: "+ rawTextQuery + "\n")
-				fileWriter.write("ORSEN: Okay then, Let's create a story. You start" + "\n")
+				convo_fileWriter.write("CHILD: "+ rawTextQuery + "\n")
+				convo_fileWriter.write("ORSEN: Okay then, Let's create a story. You start" + "\n")
 				
 			#If the user does not want to create a new story 
 			else:
@@ -221,11 +229,15 @@ def orsen():
 				turn_count = 0
                 
 				#FOR FILES - CLOSE
-				fileWriter.write("CHILD: "+ rawTextQuery + "\n")
-				fileWriter.write("ORSEN: Thank you. Goodbye" + "\n")
+				convo_fileWriter.write("CHILD: "+ rawTextQuery + "\n")
+				convo_fileWriter.write("ORSEN: Thank you. Goodbye" + "\n")
 				end = datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")
-				fileWriter.write(end)
-				fileWriter.close()
+				convo_fileWriter.write(end)
+				convo_fileWriter.close()
+
+				ie_fileWriter.write("~~~ End Session ~~~")
+				ie_fileWriter.write(end)
+				ie_fileWriter.close()
 				
 		#when the user says they want to stop telling the story
 		elif rawTextQuery.lower() == "bye" or rawTextQuery.lower() == "the end" or rawTextQuery.lower() == "the end.":
@@ -234,8 +246,8 @@ def orsen():
 			endstory = True
             
 			#FOR FILES
-			fileWriter.write("CHILD: "+ rawTextQuery + "\n")
-			fileWriter.write("ORSEN: Wow. Thanks for the story. Do you want to hear the full story?" + "\n")
+			convo_fileWriter.write("CHILD: "+ rawTextQuery + "\n")
+			convo_fileWriter.write("ORSEN: Wow. Thanks for the story. Do you want to hear the full story?" + "\n")
             
 		else:
 			result = None
@@ -243,11 +255,11 @@ def orsen():
 			# if the reply is a story, then extract info and add in story. If not, then don't add
 			if getCategory(rawTextQuery) == CAT_STORY:
 				# you can pass user id here
-				story_list[len(story_list)-1] = extract_info(userid, story_list)
+				story_list[len(story_list)-1] = extract_info(userid, story_list, ie_fileWriter)
 				result = get_unkown_word()
 			
 			if result != None:
-				output_reply = "Can you tell me more about " + result + "?"
+				output_reply = "Can you use " + result + " in a sentence?"
 
 			else:
 				#dialogue
@@ -264,8 +276,8 @@ def orsen():
 			print("I: ", rawTextQuery)
 			print("O: ", output_reply)
 
-			fileWriter.write("Child: " + rawTextQuery + "\n")
-			fileWriter.write("ORSEN: " + output_reply + "\n")
+			convo_fileWriter.write("Child: " + rawTextQuery + "\n")
+			convo_fileWriter.write("ORSEN: " + output_reply + "\n")
 	
 	
 	#if expectedUserResponse is false, change storyId
