@@ -43,6 +43,8 @@ secret_code = ""
 path ="C:/Users/ruby/Desktop/Thesis/ORSEN/Conversation Logs"
 date = datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 
+dialogueLogs ="C:/Users/ruby/Desktop/Thesis/ORSEN/Dialouge Model Logs"
+
 def main_intent():
 	return None
 
@@ -64,6 +66,7 @@ def orsen():
     
     #FOR FILES - OPEN
 	fileWriter = open(path+ "/" + date+".txt", "a")
+	dm_fileWriter = open(dialogueLogs+ "/" + date+".txt", "a")
 	
 	#When the app invocation starts, create storyid and greet the user and reset reprompt count
 	if focus["intent"] == "actions.intent.MAIN":
@@ -100,10 +103,49 @@ def orsen():
 			fileWriter.write("ORSEN: Okay. Goodbye" + "\n")
 			fileWriter.close()
 
+
+			world = server.get_world(storyId)
+			dm_fileWriter.write("\n\n")
+			dm_fileWriter.write("---DIALOGUE MOVE COUNTS--- \n")
+			dm_fileWriter.write("FEEdBACK COUNTS: "+ str(world.feedback_count) + "\n")
+			dm_fileWriter.write("GENERAL COUNTS: "+ str(world.general_pump_count) + "\n")
+			dm_fileWriter.write("SPECIFIC COUNTS: " + str(world.specific_pump_count) + "\n")
+			dm_fileWriter.write("PROMPT COUNTS: " + str(world.prompt_count) + "\n")
+			dm_fileWriter.write("HINT COUNTS: " + str(world.hint_count) + "\n")
+			dm_fileWriter.write("SUGGEST COUNTS: " + str(world.suggest_count) + "\n")
+			dm_fileWriter.write("FOLLOWUP1 COUNTS: " + str(world.followup1_count) + "\n")
+			dm_fileWriter.write("FOLLOWUP2 COUNTS: " + str(world.followup2_count) + "\n")
+
+			dm_fileWriter.write("---COMBINATION DIALOGUE MOVE COUNTS--- \n")
+			dm_fileWriter.write("F + General: "+ str(world.feedback_general_count) + "\n")
+			dm_fileWriter.write("F + Specific: "+ str(world.feedback_specific_count) + "\n")
+			dm_fileWriter.write("F + Hinting: "+ str(world.feedback_hint_count) + "\n")
+			dm_fileWriter.write("F + Suggesting: "+ str(world.feedback_suggest_count) + "\n")
+
+			dm_fileWriter.write("---SUGGESTION YES/NO--- \n")
+			dm_fileWriter.write("Yes: "+ str(world.yes) + "\n")
+			dm_fileWriter.write("No: "+ str(world.no) + "\n")
+
+			dm_fileWriter.write("---Follow Up1 Don'tLike/Wrong--- \n")
+			dm_fileWriter.write("Don't Like: "+ str(world.dontLike) + "\n")
+			dm_fileWriter.write("Wrong: "+ str(world.wrong) + "\n")
+
+			dm_fileWriter.write("---Follow Up2 in/not--- \n")
+			dm_fileWriter.write("In Choices: "+ str(world.inChoices) + "\n")
+			dm_fileWriter.write("None of the Above: "+ str(world.notInChoices) + "\n")
+
+			dm_fileWriter.write("---GLOBAL + LOCAL CONCEPTS --- \n")
+			dm_fileWriter.write("GLOBAL CONCEPT LIST: " + str(world.global_concept_list) + "\n")
+			dm_fileWriter.write("LENGTH GLOBAL CONCEPT LIST: " + str(len(world.global_concept_list)) + "\n")
+			dm_fileWriter.write("LOCAL CONCEPT LIST: " + str(world.local_concept_list) + "\n")
+			dm_fileWriter.write("LENGTH LOCAL CONCEPT LIST: " + str(len(world.local_concept_list)) + "\n")
+			dm_fileWriter.write("END OF SESSION")
+
+			dm_fileWriter.close()
 		#reprompt user
 		else:
 			#get the reprompt
-			retrieved = retrieve_output("", storyId, userid)
+			retrieved = retrieve_output("", storyId, userid, dm_fileWriter)
 			
 			if retrieved.type_num == MOVE_HINT:
 				extract_info(userid, retrieved.get_string_response())
@@ -252,7 +294,7 @@ def orsen():
 			else:
 				#dialogue
 				#get the dialogue regardless of type
-				retrieved = retrieve_output(rawTextQuery, storyId, userid)
+				retrieved = retrieve_output(rawTextQuery, storyId, userid, dm_fileWriter)
 
 				if retrieved.type_num == MOVE_HINT:
 					extract_info(userid, retrieved.get_string_response())

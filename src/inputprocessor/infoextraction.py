@@ -602,6 +602,7 @@ CAT_ANSWER = 3
 # ie_categorizing
 def getCategory(sentence):
     # checks if entry has "orsen"
+    sentence = sentence.lower()
     if 'orsen' in sentence or 'im stuck' == sentence or "i'm stuck" == sentence or 'your turn' == sentence or 'help me' == sentence or 'help me start' == sentence:
         return CAT_COMMAND
     elif 'yes' == sentence or 'no' == sentence or "don't like" in sentence or "dont like" in sentence or "wrong" in sentence:

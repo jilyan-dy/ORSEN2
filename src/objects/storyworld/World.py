@@ -9,11 +9,13 @@ MOVE_REQUESTION = 5
 MOVE_UNKNOWN = 6
 MOVE_PROMPT = 7
 MOVE_SUGGESTING = 8
+MOVE_FOLLOW_UP1 = 9
+MOVE_FOLLOW_UP2 = 10
 
-MOVE_FEEDBACK_GENERAL = 9
-MOVE_FEEDBACK_SPECIFIC = 10
-MOVE_FEEDBACK_HINT = 11
-MOVE_FEEDBACK_SUGGESTING = 12
+MOVE_FEEDBACK_GENERAL = 11
+MOVE_FEEDBACK_SPECIFIC = 12
+MOVE_FEEDBACK_HINT = 13
+MOVE_FEEDBACK_SUGGESTING = 14
 
 class World:
 
@@ -47,11 +49,26 @@ class World:
         self.hint_count = 0
         self.suggest_count = 0
         self.prompt_count = 0
+        self.followup1_count = 0
+        self.followup2_count = 0
 
         self.feedback_general_count = 0
         self.feedback_specific_count = 0
         self.feedback_hint_count = 0
         self.feedback_suggest_count = 0
+
+        #yes/ no
+        self.yes = 0
+        self.no = 0
+
+        #don't like/ wrong
+        self.dontLike = 0
+        self.wrong = 0
+
+        #inChoices/ none of the above
+        self.inChoices = 0
+        self.notInChoices = 0
+
 
     def add_character(self, char):
         if char.id not in self.objects and char.id not in self.characters:
@@ -154,7 +171,11 @@ class World:
             self.suggest_count += 1
         elif response.type_num == MOVE_PROMPT: 
             self.prompt_count += 1
-        
+        elif response.type_num == MOVE_FOLLOW_UP1:
+            self.followup1_count += 1
+        elif response.type_num == MOVE_FOLLOW_UP2: 
+            self.followup2_count += 1
+
         # curr_responses = [self.feedback_count, self.general_pump_count, self.specific_pump_count, self.hint_count, self.suggest_count]
         # for i in range (len(curr_responses)):
         #     print(curr_responses[i])
@@ -169,7 +190,7 @@ class World:
         elif type == MOVE_FEEDBACK_SUGGESTING:
             self.feedback_suggest_count
         
-    def compute_weights_dialogue(self):
+    def compute_weights_dialogue(self, dm_fileWriter):
         total_responses = 0
         total_responses += self.feedback_count + self.general_pump_count + self.specific_pump_count + self.hint_count + self.suggest_count
 
@@ -190,6 +211,8 @@ class World:
         
         print("F, GP, SP, H, S")
         print("Weights", weights)
+        dm_fileWriter.write("Current weights: F, GP, SP, H, S: \n")
+        dm_fileWriter.write(str(weights) +"\n")
 
         return numpy.random.choice(elements, p=weights) 
         
