@@ -239,7 +239,7 @@ nodes = "1"
 #dependent_node = "None,1,None,3"
 dependent_node = "1"'''
 
-
+'''
 template = "_1_ wanted to _2_ during the _3_ _4_"
 relation = "1 Character, 1 CapableOf 2, 4 IsA weather, 3 HasProperty 4"
 blank = "Character,CapableOf,IsA,HasProperty"
@@ -251,7 +251,7 @@ template = "_3_ _4_"
 relation = "4 IsA weather, 4 HasProperty 3"
 blank = "IsA,HasProperty"
 nodes = "4,3"
-dependent_node = "4,3"
+dependent_node = "4,3" '''
 
 '''
 template = "Then on _1_, _2_ used_ _3_ for _4_."
@@ -290,6 +290,14 @@ blank = "Character,CapableOf,CapableOf"
 nodes = "1,2,3"
 #dependent_node = "None,1,None,3"
 dependent_node = "1,2,None" '''
+
+
+template = "The _1_ can have _2_"
+relation = "1 Object, 1 HasA 2"
+blank = "Object,HasA"
+nodes = "1,2"
+dependent_node = "1,2" 
+
 
 template_split = str(template).split("_")
 relation_split = str(relation).split(",")
