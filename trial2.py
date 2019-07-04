@@ -28,7 +28,7 @@ def filler(curr_blank, used_concept_list, return_back):
         return "Change move"
     
     if return_back == True:
-        exit(0)
+        #exit(0)
         used_concept_list[curr_blank].clear()
 
         if dependent_node_split[curr_blank-1] != "None":
@@ -159,7 +159,8 @@ def filler(curr_blank, used_concept_list, return_back):
             return filler(curr_blank + 1, used_concept_list, False)
 
     elif blank_type == "Object":
-        object = ["ball", "gift", "cake"]
+        #object = ["ball", "gift", "cake"]
+        object = ["cake"]
 
         object = [x for x in object if x not in used_concept_list[curr_blank-1]]
         object = [x for x in object if x not in dict_nodes.values()]
@@ -292,11 +293,11 @@ nodes = "1,2,3"
 dependent_node = "1,2,None" '''
 
 
-template = "The _1_ can have _2_"
-relation = "1 Object, 1 HasA 2"
-blank = "Object,HasA"
-nodes = "1,2"
-dependent_node = "1,2" 
+template = "_1_ went to the _2_ to _3_"
+relation = "1 Character, 1 AtLocation 2, 2 UsedFor 3"
+blank = "Character,AtLocation,UsedFor"
+nodes = "1,2,3"
+dependent_node = "1,2,3" 
 
 
 template_split = str(template).split("_")
@@ -342,12 +343,12 @@ print(uwu)
 
 
 # FOR FOLLOW UP
-'''
+
 print (follow_up_relations)
 print (assertion_list)
 print(dict_nodes)
 
-blankers = "None,_1_ can _2_,None,_3_ can be _2_"
+blankers = "None,_1_ is at _2_,_2_ is used for _3_"
 
 blankers = str(blankers).split(",")
 
@@ -365,7 +366,11 @@ final2 = []
 start = 65
 for x in range(len(follow_up_relations)):
     temp = blankers_list[follow_up_relations[x][0]]
-    final.append([chr(start) + ". ", dict_nodes[temp[0]], temp[1], dict_nodes[temp[2]]])
+    print(x, temp)
+    if (len(temp) == 2):
+        final.append([chr(start) + ". ", dict_nodes[temp[0]], temp[1]])
+    else:
+        final.append([chr(start) + ". ", dict_nodes[temp[0]], temp[1], dict_nodes[temp[2]]])
     final2.append([chr(start), follow_up_relations[x][1]])
 
     start = start + 1
@@ -386,7 +391,7 @@ print(final2)
 start = 65
 print(final_rep)
 
-
+'''
 # Determine which relation
 ans = input()
 

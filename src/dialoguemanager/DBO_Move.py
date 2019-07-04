@@ -6,7 +6,7 @@ TYPE_GENERAL_PUMP = "general"
 TYPE_SPECIFIC_PUMP = "specific"
 TYPE_HINT = "hinting"
 TYPE_REQUESTION = ""
-TYPE_SUGGESTING = "suggestin"
+TYPE_SUGGESTING = "suggesting"
 
 #This function is not being used
 def get_specific_template(id):

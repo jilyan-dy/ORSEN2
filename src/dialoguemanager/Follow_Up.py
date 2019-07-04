@@ -20,7 +20,10 @@ class Follow_Up:
         for x in range(len(follow_up_relations)):
             temp = self.follow_up_template[follow_up_relations[x][0]]
             # ADD _1_ is a weather stuff
-            self.final_template_list.append([chr(self.start) + ". ", dict_nodes[temp[0]], temp[1], dict_nodes[temp[2]]])
+            if (len(temp) == 2):
+                self.final_template_list.append([chr(self.start) + ". ", dict_nodes[temp[0]], temp[1]])
+            else:
+                self.final_template_list.append([chr(self.start) + ". ", dict_nodes[temp[0]], temp[1], dict_nodes[temp[2]]])
             self.choices_relationID.append([chr(self.start), follow_up_relations[x][1]])
 
             self.start = self.start + 1
