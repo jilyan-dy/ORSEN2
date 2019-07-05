@@ -25,7 +25,7 @@ def reading(filename):
 # user input goes through spacy
 # comment by Jilyan this function actually just copy pastes the output of spacy
 # user input goes through spacy in run.py before this function is called. it is not done here 
-def pos_ner_nc_processing(sentence):
+def pos_ner_nc_processing(sentence, ie_fileWriter):
     new_sentence = Sentence()
     new_sentence.words = sentence
 
@@ -71,6 +71,27 @@ def pos_ner_nc_processing(sentence):
     print(new_sentence.text_ent)
     print("ent label:   ")
     print(new_sentence.label)
+
+    ie_fileWriter.write("This is the output for pos_ner_nc_processing: \n")
+    ie_fileWriter.write("input/new_sentence.words: " + str(new_sentence.words) + "\n")
+    ie_fileWriter.write("children:	\n")
+    ie_fileWriter.write(str(new_sentence.children) + "\n")
+    ie_fileWriter.write("text_token:\n")
+    ie_fileWriter.write(str(new_sentence.text_token) + "\n")
+    ie_fileWriter.write("lemma:		\n")
+    ie_fileWriter.write(str(new_sentence.lemma) + "\n")
+    ie_fileWriter.write("head_text:	\n")
+    ie_fileWriter.write(str(new_sentence.head_text) + "\n")
+    ie_fileWriter.write("dep:		\n")
+    ie_fileWriter.write(str(new_sentence.dep) + "\n")
+    ie_fileWriter.write("pos:		\n")
+    ie_fileWriter.write(str(new_sentence.pos) + "\n")
+    ie_fileWriter.write("tag:		\n")
+    ie_fileWriter.write(str(new_sentence.tag) + "\n")
+    ie_fileWriter.write("text ents: \n")
+    ie_fileWriter.write(str(new_sentence.text_ent) + "\n")
+    ie_fileWriter.write("ent label: \n")
+    ie_fileWriter.write(str(new_sentence.label) + "\n\n")
     
     return new_sentence
 
@@ -610,8 +631,10 @@ def getCategory(sentence):
     else:
         return CAT_STORY
 
-def coref_resolution(s, sent_curr, sent_bef, world, isFirst):
+def coref_resolution(s, sent_curr, sent_bef, world, isFirst, ie_fileWriter):
     print("ENTERED coref_resolution")
+    ie_fileWriter.write("Before Coref Resolution : ")
+    ie_fileWriter.write(sent_curr + "\n")
     coref = Coref()
 
     num_prn = 0
@@ -790,7 +813,9 @@ def coref_resolution(s, sent_curr, sent_bef, world, isFirst):
 
                 isThis = ""
                 changeThis = ""
-            
+    ie_fileWriter.write("After Coref Resolution : ")
+    ie_fileWriter.write(sent_curr + "\n\n")
+
     return sent_curr
 
 
@@ -2112,8 +2137,9 @@ def extract_conj_index(sent, char_index):
     return characters
 
 # extract all possible relations from input based on templates
-def extract_relation(sent, world):
+def extract_relation(sent, world, ie_fileWriter):
     print("ENTER extract_relation function")
+    ie_fileWriter.write("Extracted at extract_relation \n")
 
     # get unique first of templates
     templates_first = DBO_Relation.get_unique_first()
@@ -2156,6 +2182,7 @@ def extract_relation(sent, world):
                 if temp is not None:
                     extracted.append(temp)
                     print("appended 1: " + extracted[len(extracted)-1].__str__())
+                    ie_fileWriter.write("appended 1: " + extracted[len(extracted)-1].__str__() + "\n")
                     if temp.second == "location":
                         first_temp = temp.first
                 if (temp is None and sent.lemma[c_index] == "-PRON-") or (temp is not None and temp.second == "character"):
@@ -2197,6 +2224,7 @@ def extract_relation(sent, world):
                                 if temp is not None:
                                     extracted.append(temp)
                                     print("appended 2: " + extracted[len(extracted)-1].__str__())
+                                    ie_fileWriter.write("appended 2: " + extracted[len(extracted)-1].__str__() + "\n")
                                     if temp.second == "location":
                                         second_word = temp.first
                                 if (temp is None and sent.lemma[second_index] == "-PRON-") or (temp is not None and temp.second == "character"):
@@ -2220,9 +2248,11 @@ def extract_relation(sent, world):
                                         if relation.is_flipped == 'y':
                                             extracted.append(Relation.Relation(relation.id, relation.relation, second_word, relation.keywords, first))
                                             print("appended 3: " + extracted[len(extracted)-1].__str__())
+                                            ie_fileWriter.write("appended 3: " + extracted[len(extracted)-1].__str__() + "\n")
                                         else:
                                             extracted.append(Relation.Relation(relation.id, relation.relation, first, relation.keywords, second_word))
                                             print("appended 4: " + extracted[len(extracted)-1].__str__())
+                                            ie_fileWriter.write("appended 4: " + extracted[len(extracted)-1].__str__() + "\n")
 
                                     if not (relation.relation == "HasProperty" and relation.first == "amod"):
                                         while (second_index + 2 < len(sent.dep) and sent.dep[second_index + 2] == "conj" and sent.pos[second_index + 2] == sent.pos[second_index]) or \
@@ -2236,7 +2266,8 @@ def extract_relation(sent, world):
                                             temp = extract_instance_of(sent, second_word)
                                             if temp is not None:
                                                 extracted.append(temp)
-                                                print("appended 6: " + extracted[len(extracted)-1].__str__())
+                                                print("appended 5: " + extracted[len(extracted)-1].__str__())
+                                                ie_fileWriter.write("appended 5: " + extracted[len(extracted)-1].__str__() + "\n")
                                                 if temp.second == "location":
                                                     second_word = temp.first
                                             if (temp is None and sent.lemma[second_index] == "-PRON-") or (temp is not None and temp.second == "character"):
@@ -2253,10 +2284,12 @@ def extract_relation(sent, world):
                                             for first in character_list:
                                                 if relation.is_flipped == 'y':
                                                     extracted.append(Relation.Relation(relation.id, relation.relation, second_word, relation.keywords, first))
-                                                    print("appended 7: " + extracted[len(extracted)-1].__str__())
+                                                    print("appended 6: " + extracted[len(extracted)-1].__str__())
+                                                    ie_fileWriter.write("appended 6: " + extracted[len(extracted)-1].__str__() + "\n")
                                                 else:
                                                     extracted.append(Relation.Relation(relation.id, relation.relation, first, relation.keywords, second_word))
-                                                    print("appended 8: " + extracted[len(extracted)-1].__str__())
+                                                    print("appended 7: " + extracted[len(extracted)-1].__str__())
+                                                    ie_fileWriter.write("appended 7: " + extracted[len(extracted)-1].__str__() + "\n")
 
                                 flag = True
                                 break
@@ -2267,16 +2300,19 @@ def extract_relation(sent, world):
     for i in range(len(sent.label)):
         if sent.label[i] == "TIME":
             extracted.append(Relation.Relation(-1, "InstanceOf", sent.text_ent[i], "", "time"))
-            print("appended 9: " + extracted[len(extracted)-1].__str__())
+            print("appended 8: " + extracted[len(extracted)-1].__str__())
+            ie_fileWriter.write("appended 8: " + extracted[len(extracted)-1].__str__() + "\n")
 
         if sent.label[i] == "DATE":
             extracted.append(Relation.Relation(-1, "InstanceOf", sent.text_ent[i], "", "date"))
-            print("appended 10: " + extracted[len(extracted)-1].__str__())
+            print("appended 9: " + extracted[len(extracted)-1].__str__())
+            ie_fileWriter.write("appended 9: " + extracted[len(extracted)-1].__str__() + "\n")
 
+    ie_fileWriter.write("\n")
     return extracted
 
 # filter relations that do not exist in global knowledge base
-def remove_existing_relations_global(extracted):
+def remove_existing_relations_global(extracted, ie_fileWriter):
     result = []
 
     for i in range(len(extracted)):
@@ -2285,13 +2321,16 @@ def remove_existing_relations_global(extracted):
 
     # print left in extracted list
     print("What's left after removing existing global relations")
+    ie_fileWriter.write("What's left after removing existing global relations\n")
     for i in result:
         print(i.__str__())
+        ie_fileWriter.write(i.__str__() + "\n")
 
+    ie_fileWriter.write("\n")
     return result
 
 # filter relations that do not exist in local knowledge base
-def remove_existing_relations_local(userid, extracted):
+def remove_existing_relations_local(userid, extracted, ie_fileWriter):
     # print("ENTER remove_existing_relations_local")
     result = []
     temp = None
@@ -2304,17 +2343,23 @@ def remove_existing_relations_local(userid, extracted):
         # else update it's score
         elif temp.valid == 1:
             if temp.userid != userid:
+                ie_fileWriter.write("Updated score of this concept : " + temp.__str__() + "\n")
                 DBO_Local_Concept.update_score(temp.id, temp.score + 1.25)
             if temp.score + 1.25 >= 5: # change the 5
+                ie_fileWriter.write("Moved this concept from local to global : " + temp.__str__() + "\n")
                 DBO_Concept.add_concept(Concept(0,temp.first, temp.relation, temp.second))
                 DBO_Local_Concept.update_valid(temp.id, 0)
             temp = None
 
     # print left in extracted list
     print("What's left after removing existing local relations")
+    ie_fileWriter.write("What's left after removing existing local relations \n")
     for i in result:
         print(i.__str__())
+        ie_fileWriter.write(i.__str__() + "\n")
 
+    
+    ie_fileWriter.write("\n")
     return result
 
 # add new relations to local knowledge base
