@@ -11,11 +11,11 @@ CAUSES = "Causes"
 DESIRES = "Desires"
 CAPABLE_OF = "CapableOf"
 HAS_PROPERTY = "HasProperty"
-HAS = "Has"
-RECEIVED_ACTION = "ReceivedAction"
+HAS_A = "HasA"
+RECEIVES_ACTION = "ReceivesAction"
 
 RELATIONS = [IS_A, PART_OF, AT_LOCATION, HAS_PREREQ, CREATED_BY, USED_FOR, CAUSES, DESIRES, CAPABLE_OF, HAS_PROPERTY,
-             HAS, RECEIVED_ACTION]
+             HAS_A, RECEIVES_ACTION]
 
 
 def get_specific_concept(id):
@@ -189,7 +189,7 @@ def get_concept_like(relation, first="", second=""):
           "first," \
           "second " \
           "FROM concepts " \
-          "WHERE first LIKE '%\%s%' AND second LIKE '%\%s%' AND relation = %s"
+          "WHERE first LIKE '%"+first+"%' AND second LIKE '%"+second+"%' AND relation = '"+relation+"'"
 
     conn = SqlConnConcepts.get_connection()
     cursor = conn.cursor()
@@ -197,7 +197,7 @@ def get_concept_like(relation, first="", second=""):
     resulting = []
 
     try:
-        cursor.execute(sql, (first, second, relation,))
+        cursor.execute(sql)
         # Fetch all the rows in a list of lists.
         result = cursor.fetchall()
         print("GLOBAL, LENGTH OF RESULT:", len(result))

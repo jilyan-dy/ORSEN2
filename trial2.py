@@ -1,16 +1,15 @@
 from src.dialoguemanager import Follow_Up, DBO_Follow_Up
 from src.db.concepts import DBO_Concept, DBO_Local_Concept
 from numpy import random
-
+from sys import exit
 
 def filler(curr_blank, used_concept_list, return_back):
     DATABASE_TYPE = DBO_Local_Concept
     dbtype = "L"
 
-    if curr_blank == 4:
-        print("Dictionary", dict_nodes)
-        print("curr_blank: ", curr_blank)
-        print("Used CL", used_concept_list)
+    print("Dictionary", dict_nodes)
+    print("curr_blank: ", curr_blank)
+    print("Used CL", used_concept_list)
 
     if curr_blank == len(assertion_list)+1:
         for x in range(len(blanks)):
@@ -29,6 +28,7 @@ def filler(curr_blank, used_concept_list, return_back):
         return "Change move"
     
     if return_back == True:
+        exit(0)
         used_concept_list[curr_blank].clear()
 
         if dependent_node_split[curr_blank-1] != "None":
@@ -54,7 +54,7 @@ def filler(curr_blank, used_concept_list, return_back):
             subject = charas[choice_index]
 
             #subject = "person"
-            dict_nodes[str(curr_blank)] = subject
+            dict_nodes[num_nodes[curr_blank-1]] = subject
             used_concept_list[curr_blank-1].append(subject)
 
             return filler(curr_blank + 1, used_concept_list, False)
@@ -71,7 +71,7 @@ def filler(curr_blank, used_concept_list, return_back):
         while len(usable_concepts) <= 0:
             result_nodes = node_decider(bin_assertion_template)
             print("dbtype:", dbtype)
-
+            print(result_nodes)
             if result_nodes[0] == "NODE_START":
                 usable_concepts = DATABASE_TYPE.get_concept_like(blank_type, first=result_nodes[1])
             elif result_nodes[0] == "NODE_END":
@@ -147,7 +147,8 @@ def filler(curr_blank, used_concept_list, return_back):
             result = [key for key, values in rev_dict.items() 
                                         if len(values) > 1] 
             if len(result) > 0:
-                return filler(curr_blank, used_concept_list, False)
+                if result[0] != "":
+                    return filler(curr_blank, used_concept_list, False)
             
             #END - AVOID USING THE SAME NODE IN ONE SENTENCE
 
@@ -167,7 +168,8 @@ def filler(curr_blank, used_concept_list, return_back):
             choice_index = random.randint(0, len(object))
             subject = object[choice_index]
 
-            dict_nodes[str(curr_blank)] = subject
+            #dict_nodes[str(curr_blank)] = subject
+            dict_nodes[num_nodes[curr_blank-1]] = subject
             used_concept_list[curr_blank-1].append(subject)
 
             return filler(curr_blank + 1, used_concept_list, False)
@@ -240,15 +242,31 @@ dependent_node = "1"'''
 '''
 template = "_1_ wanted to _2_ during the _3_ _4_"
 relation = "1 Character, 1 CapableOf 2, 4 IsA weather, 3 HasProperty 4"
-blank = "Character,CapableOf,IsA,HasPropterty"
-nodes = "1,2,3,4"
-dependent_node = "1,2,3,4"'''
+blank = "Character,CapableOf,IsA,HasProperty"
+nodes = "1,2,4,3"
+dependent_node = "1,2,4,3"
 
-template = "_1_ is a _2_ and it can _3_"
-relation = "1 Character, 1 IsA 2, 1 CapableOf 3"
-blank = "Character,IsA,CapableOf"
+
+template = "_3_ _4_"
+relation = "4 IsA weather, 4 HasProperty 3"
+blank = "IsA,HasProperty"
+nodes = "4,3"
+dependent_node = "4,3" '''
+
+'''
+template = "Then on _1_, _2_ used_ _3_ for _4_."
+relation = "1 IsA day, 2 Character, 3 Object, 3 UsedFor 4, 2 CapableOf 4"
+blank = "IsA,Character,Object,UsedFor,CapableOf"
+nodes = "1,2,3,4"
+dependent_node = "1,2,3,4,None"'''
+
+'''
+template = "_1_ went to the _2_ to _3_"
+relation = "1 Character, 1 AtLocation 2, 2 UsedFor 3"
+blank = "Character,AtLocation,UsedFor"
 nodes = "1,2,3"
-dependent_node = "1,2,3"
+dependent_node = "1,2,3" '''
+
 
 '''
 template = "_1_ skies"
@@ -272,6 +290,14 @@ blank = "Character,CapableOf,CapableOf"
 nodes = "1,2,3"
 #dependent_node = "None,1,None,3"
 dependent_node = "1,2,None" '''
+
+
+template = "The _1_ can have _2_"
+relation = "1 Object, 1 HasA 2"
+blank = "Object,HasA"
+nodes = "1,2"
+dependent_node = "1,2" 
+
 
 template_split = str(template).split("_")
 relation_split = str(relation).split(",")
@@ -311,6 +337,8 @@ if uwu == "TEMPLATE COMPLETE":
 print(dict_nodes)
 print(used_concept_list)
 print(template_split)
+
+print(uwu)
 
 
 # FOR FOLLOW UP

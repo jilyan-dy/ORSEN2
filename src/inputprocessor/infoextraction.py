@@ -355,7 +355,7 @@ def add_capability(sent, attr, subject, world, num, i=""):
         negation = False
 
     if sent.dep[num] == "relcl":
-        first_attribute = Attribute(DBO_Concept.RECEIVED_ACTION, sent.lemma[num], negation)
+        first_attribute = Attribute(DBO_Concept.RECEIVES_ACTION, sent.lemma[num], negation)
     else:
         first_attribute = Attribute(DBO_Concept.CAPABLE_OF, sent.lemma[num], negation)
 
@@ -453,12 +453,12 @@ def add_objects(sent, child, dep, lemma, world, subject="", negated=""):
 
             elif sent.dep[index] in ["poss"]:
                 if sent.text_token[index] in world.characters:
-                    add_attributes(sent, c, sent.text_token[index], world, "", DBO_Concept.HAS)
+                    add_attributes(sent, c, sent.text_token[index], world, "", DBO_Concept.HAS_A)
                     char = world.characters[sent.text_token[index]]
                     char.timesMentioned += 1
                     sent.finished_nodes[index] = 1
                 elif sent.text_token[index] in world.objects:
-                    add_attributes(sent, c, sent.text_token[index], world, "", DBO_Concept.HAS)
+                    add_attributes(sent, c, sent.text_token[index], world, "", DBO_Concept.HAS_A)
                     obj = world.objects[sent.text_token[index]]
                     obj.timesMentioned += 1
                     sent.finished_nodes[index] = 1
@@ -466,12 +466,12 @@ def add_objects(sent, child, dep, lemma, world, subject="", negated=""):
                     add_objects(sent, compound_extraction(sent, str(sent.text_token[index])), sent.dep[index], lemma,
                                 world)
                     add_attributes(sent, c, compound_extraction(sent, str(sent.text_token[index])), world, "",
-                                   DBO_Concept.HAS)
+                                   DBO_Concept.HAS_A)
     if dep in ["attr", "appos"]:
         add_attributes(sent, child, subject, world, negated, DBO_Concept.IS_A)
     if dep in ["dobj", "relcl"]:
         if subject:
-            add_attributes(sent, child, subject, world, negated, DBO_Concept.HAS)
+            add_attributes(sent, child, subject, world, negated, DBO_Concept.HAS_A)
 
 
 def check_duplicate_attribute(obj_attributes, attribute):
@@ -623,6 +623,7 @@ CAT_ANSWER = 3
 # ie_categorizing
 def getCategory(sentence):
     # checks if entry has "orsen"
+    sentence = sentence.lower()
     if 'orsen' in sentence or 'im stuck' == sentence or "i'm stuck" == sentence or 'your turn' == sentence or 'help me' == sentence or 'help me start' == sentence:
         return CAT_COMMAND
     elif 'yes' == sentence or 'no' == sentence or "don't like" in sentence or "dont like" in sentence or "wrong" in sentence:
