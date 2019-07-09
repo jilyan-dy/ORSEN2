@@ -293,12 +293,11 @@ nodes = "1,2,3"
 dependent_node = "1,2,None" '''
 
 
-template = "_1_ went to the _2_ to _3_"
-relation = "1 Character, 1 AtLocation 2, 2 UsedFor 3"
-blank = "Character,AtLocation,UsedFor"
-nodes = "1,2,3"
-dependent_node = "1,2,3" 
-
+template = "_1_ made a _2_ _3_ by _4_"
+relation = "1 Character, 3 Object, 3 HasProperty 2, 3 CreatedBy 4, 1 CapableOf 4"
+blank = "Character,Object,HasProperty,CreatedBy,CapableOf"
+nodes = "1,3,2,4"
+dependent_node = "1,3,2,4,None" 
 
 template_split = str(template).split("_")
 relation_split = str(relation).split(",")
@@ -344,11 +343,11 @@ print(uwu)
 
 # FOR FOLLOW UP
 
-print (follow_up_relations)
+print ("FR", follow_up_relations)
 print (assertion_list)
 print(dict_nodes)
 
-blankers = "None,_1_ is at _2_,_2_ is used for _3_"
+blankers = "None,None,_3_ can be _2_,_3_ is created by _4_,_1_ can _4_"
 
 blankers = str(blankers).split(",")
 
@@ -364,7 +363,10 @@ print(blankers_list)
 final = []
 final2 = []
 start = 65
+
 for x in range(len(follow_up_relations)):
+    print("AS", len(follow_up_relations))
+    print('blankers', len(blankers_list))
     temp = blankers_list[follow_up_relations[x][0]]
     print(x, temp)
     if (len(temp) == 2):
