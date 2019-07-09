@@ -40,8 +40,8 @@ username = ""
 secret_code = ""
 
 #FOR FILES
-convo_path ="D:/Desktop/Jilyan/Academics/College/THESIS/Conversation Logs"
-information_path ="D:/Desktop/Jilyan/Academics/College/THESIS/Information Extraction Logs"
+convo_path ="C:/Users/ruby/Desktop/Thesis/ORSEN/Conversation Logs"
+information_path ="C:/Users/ruby/Desktop/Thesis/ORSEN/Information Extraction Logs"
 dialogueLogs ="C:/Users/ruby/Desktop/Thesis/ORSEN/Dialouge Model Logs"
 
 date = datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")
@@ -85,6 +85,7 @@ def orsen():
 		#FOR 
 		convo_fileWriter.write(date + "\n")
 		ie_fileWriter.write(date + "\n")
+		dm_fileWriter.write(date + "\n")
 		convo_fileWriter.write("ORSEN: Hi! What's your name?" + "\n")
 
 	elif focus["intent"] == "actions.intent.GIVE_IDEA_ORSEN":
@@ -308,7 +309,7 @@ def orsen():
 				retrieved = retrieve_output(rawTextQuery, storyId, userid, dm_fileWriter)
 
 				if retrieved.type_num == MOVE_HINT:
-					extract_info(userid, retrieved.get_string_response())
+					extract_info(userid, retrieved.get_string_response(), ie_fileWriter)
 
 				output_reply = retrieved.get_string_response()
 				
