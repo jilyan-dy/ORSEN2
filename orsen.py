@@ -165,7 +165,7 @@ def orsen():
 		turn_count = turn_count + 1
 		username = str(rawTextQuery).split()
 		username = username[len(username)-1].lower()
-		convo_fileWriter.write("CHILD: My name is" + username + "\n")
+		convo_fileWriter.write("CHILD: My name is " + username + "\n")
 		ie_fileWriter.write("Child name is " + username + "\n")
 		data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Do we have a secret code?"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}
 		
@@ -301,7 +301,7 @@ def orsen():
 				result = get_unkown_word()
 			
 			if result != None:
-				output_reply = "Can you use " + result + " in a sentence?"
+				output_reply = "I need help! Please use " + result + " in a sentence."
 
 			else:
 				#dialogue
