@@ -119,7 +119,7 @@ def retrieve_output(coreferenced_text, world_id, userid, dm_fileWriter):
                             dm_fileWriter.write("Deduct Local Concept ID: " + str(local_concept.id) + "\n")
 
                             if local_concept.userid != userid:
-                                new_score = local_concept.score - 1.5     #Minus the score
+                                new_score = local_concept.score - 1     #Minus the score
                                 dm_fileWriter.write("Local Concept score: " + str(local_concept.score) + "\n")
                                 dm_fileWriter.write("Local Concept new score: " + str(new_score) + "\n")
                                 DBO_Local_Concept.update_score(local_concept.id, new_score) #Update the score
@@ -184,7 +184,7 @@ def retrieve_output(coreferenced_text, world_id, userid, dm_fileWriter):
                         dm_fileWriter.write("Add Local Concept ID: " + str(local_concept.id) + "\n")
 
                         if local_concept.userid != userid:
-                            new_score = local_concept.score + 1.5     #Add the score
+                            new_score = local_concept.score + 1     #Add the score
                             dm_fileWriter.write("Local Concept score: " + str(local_concept.score) + "\n")
                             dm_fileWriter.write("Local Concept new score: " + str(new_score) + "\n")
                             DBO_Local_Concept.update_score(local_concept.id, new_score) #Update the score

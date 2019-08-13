@@ -6,7 +6,7 @@ class SqlConnector:
 
     location = "localhost"
     username = "root"
-    password = "1234"
+    password = "1qw23er45"
     schema   = ""
 
     def __init__(self, schema):
