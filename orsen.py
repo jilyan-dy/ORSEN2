@@ -40,9 +40,9 @@ username = ""
 secret_code = ""
 
 #FOR FILES
-convo_path ="C:/Users/ruby/Desktop/Thesis/ORSEN/Conversation Logs"
-information_path ="C:/Users/ruby/Desktop/Thesis/ORSEN/Information Extraction Logs"
-dialogueLogs ="C:/Users/ruby/Desktop/Thesis/ORSEN/Dialouge Model Logs"
+convo_path ="D:/Desktop/Jilyan/Academics/College/THESIS/Conversation Logs"
+information_path ="D:/Desktop/Jilyan/Academics/College/THESIS/Information Extraction Logs"
+dialogueLogs ="D:/Desktop/Jilyan/Academics/College/THESIS/Dialogue Model Logs"
 
 date = datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 

@@ -292,6 +292,9 @@ def details_extraction(sent, world, current_node, subj="", neg="", text=""):
 def compound_extraction(sent, subj):
     num = -1
     initial = subj
+    print("~~~~~~~~~~~~~~~~~~~~")
+    print(type(subj))
+    print(subj)
     subj = subj.lower()
     temp = subj.split()
     # print("ENTER compound_extraction: ")
@@ -631,6 +634,17 @@ def getCategory(sentence):
     else:
         return CAT_STORY
 
+def convert_indef_pron(sent):
+    indef = ["everybody", "anybody", "somebody", "everyone", "someone", "anyone"]
+    split = re.findall(r"[\w']+|[.,!?;]", sent)
+
+    for index in range(0, len(split)):
+        if split[index].lower() in indef:
+            split[index] = "character"
+
+    sent = " ".join(split)
+    return sent
+
 def coref_resolution(s, sent_curr, sent_bef, world, isFirst, ie_fileWriter):
     print("ENTERED coref_resolution")
     ie_fileWriter.write("Before Coref Resolution : ")
@@ -814,6 +828,10 @@ def coref_resolution(s, sent_curr, sent_bef, world, isFirst, ie_fileWriter):
                 isThis = ""
                 changeThis = ""
     ie_fileWriter.write("After Coref Resolution : ")
+    ie_fileWriter.write(sent_curr + "\n\n")
+
+    sent_curr = convert_indef_pron(sent_curr)
+    ie_fileWriter.write("After Converting Indef : ")
     ie_fileWriter.write(sent_curr + "\n\n")
 
     return sent_curr
@@ -2083,6 +2101,10 @@ def get_text_ents(sent, entity):
 
 # check for unkown word one by one
 def find_unkown_word(sent):
+    ignore = ["kill", "murder", "suicide", "sex", "rape", "war", "torture", "die", "stab", "penis", "dick", "vagina", "boobs", "breast", 
+            "nobody", "none", "every", "any", "some", "other", "something", "anything", "nothing", "everything", "all", "this", "that", 
+            "these", "those", "who", "what", "when", "where", "which", "why"]
+
     # print("ENTER find_unkown_word")
     for i in range(len(sent.lemma)):
         if str(sent.pos[i]).lower() == "noun" or str(sent.pos[i]).lower() == "propn":
@@ -2092,14 +2114,14 @@ def find_unkown_word(sent):
                 if DBO_Local_Concept.get_word_concept(sent.lemma[i]) == []:
                     # if the word is not a name of a character
                     ent_label = get_entity_label(sent, sent.text_token[i])
-                    if  ent_label != None:
-                        if ent_label != "PERSON":
-                            ent_text = get_text_ents(sent, sent.text_token[i])
-                            print("New Unkown Word: " + ent_text)
-                            return ent_text
-                    else:
-                        print("New Unkown Word: " + sent.lemma[i])
-                        return sent.lemma[i]
+                    if sent.lemma[i] not in ignore:
+                        if ent_label != None:
+                            if ent_label != "PERSON":
+                                print("New Unkown Word: " + sent.lemma[i])
+                                return sent.lemma[i]
+                        else:
+                            print("New Unkown Word: " + sent.lemma[i])
+                            return sent.lemma[i]
 
     print("Found None")
     return None
@@ -2149,8 +2171,8 @@ def extract_relation(sent, world, ie_fileWriter):
     extracted = []
     be_verb = ["be", "can", "could", "have", "will", "would"]
     ignore = ["kill", "murder", "suicide", "sex", "rape", "war", "torture", "die", "stab", "penis", "dick", "vagina", "boobs", "breast", 
-            "nobody", "everybody", "anybody", "somebody", "none", "every", "any", "some", "other", "all", "everyone", "someone", "anyone",
-            "this", "that", "these", "those", "who", "what", "when", "where", "which", "why"]
+            "nobody", "none", "every", "any", "some", "other", "something", "anything", "nothing", "everything", "all", "this", "that", 
+            "these", "those", "who", "what", "when", "where", "which", "why"]
 
     # loop through the dependencies of input
     while first_index < len(sent.dep):
@@ -2344,8 +2366,8 @@ def remove_existing_relations_local(userid, extracted, ie_fileWriter):
         elif temp.valid == 1:
             if temp.userid != userid:
                 ie_fileWriter.write("Updated score of this concept : " + temp.__str__() + "\n")
-                DBO_Local_Concept.update_score(temp.id, temp.score + 1.25)
-            if temp.score + 1.25 >= 5: # change the 5
+                DBO_Local_Concept.update_score(temp.id, temp.score + 2)
+            if temp.score + 2 >= 5: # change the 5
                 ie_fileWriter.write("Moved this concept from local to global : " + temp.__str__() + "\n")
                 DBO_Concept.add_concept(Concept(0,temp.first, temp.relation, temp.second))
                 DBO_Local_Concept.update_valid(temp.id, 0)

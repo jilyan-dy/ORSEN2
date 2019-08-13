@@ -48,17 +48,16 @@ def extract_info(userid, text, ie_fileWriter):
         sent = nlp(sent) # go thru spacy
         list_of_sentences.append(infoextraction.pos_ner_nc_processing(sent, ie_fileWriter))
 
-    # DetailsExtraction
-    if len(text) == 1:
-        curr = 0
-        sentences[curr] = infoextraction.coref_resolution(list_of_sentences[curr], sentences[curr], sentences[curr], world, True, ie_fileWriter)
-    else:
-        curr = 1
-        bef = 0
-        sentences[curr] = infoextraction.coref_resolution(list_of_sentences[curr], sentences[curr], sentences[bef], world, False, ie_fileWriter)
+    for curr in range (0, len(list_of_sentences)):
+        # DetailsExtraction
+        if curr == 0:
+            sentences[curr] = infoextraction.coref_resolution(list_of_sentences[curr], sentences[curr], sentences[curr], world, True, ie_fileWriter)
+        else:
+            sentences[curr] = infoextraction.coref_resolution(list_of_sentences[curr], sentences[curr], sentences[curr - 1], world, False, ie_fileWriter)
 
-    s = nlp(sentences[len(sentences)-1])
-    list_of_sent.append(infoextraction.pos_ner_nc_processing(s, ie_fileWriter))
+    for curr in sentences:
+        s = nlp(curr)
+        list_of_sent.append(infoextraction.pos_ner_nc_processing(s, ie_fileWriter))
 
     for s in list_of_sent:
         infoextraction.details_extraction(s, world, "ROOT")
@@ -94,25 +93,26 @@ def extract_info(userid, text, ie_fileWriter):
     location = []
     event_frame = [seq_no, event_type, doer, doer_act, rec, rec_act, location]
 
-    extracted = None
-    
-    # extract all possible relations from sentence input
-    extracted = infoextraction.extract_relation(list_of_sent[0], world, ie_fileWriter)
+    for sent in list_of_sent:
+        extracted = None
+        
+        # extract all possible relations from sentence input
+        extracted = infoextraction.extract_relation(sent, world, ie_fileWriter)
 
-    # remove relations that already exist in the global kb
-    extracted = infoextraction.remove_existing_relations_global(extracted, ie_fileWriter)
+        # remove relations that already exist in the global kb
+        extracted = infoextraction.remove_existing_relations_global(extracted, ie_fileWriter)
 
-    # remove relations that already exist in the local kb
-    extracted = infoextraction.remove_existing_relations_local(userid, extracted, ie_fileWriter)
+        # remove relations that already exist in the local kb
+        extracted = infoextraction.remove_existing_relations_local(userid, extracted, ie_fileWriter)
 
-    # add new relations to local kb
-    if extracted != []:
-        infoextraction.add_relations_to_local(userid, extracted)
-    else:
-        temp = infoextraction.find_unkown_word(list_of_sent[0]) 
-        if temp != None:
-            prompt_unknown = prompt_unknown + 1
-            result = temp
+        # add new relations to local kb
+        if extracted != []:
+            infoextraction.add_relations_to_local(userid, extracted)
+        else:
+            temp = infoextraction.find_unkown_word(sent) 
+            if temp != None:
+                prompt_unknown = prompt_unknown + 1
+                result = temp
 
     return sentences[len(sentences)-1]
 
