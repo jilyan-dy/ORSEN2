@@ -291,11 +291,11 @@ def details_extraction(sent, world, current_node, subj="", neg="", text=""):
 # This is made by Jilyan
 def compound_extraction(sent, subj):
     num = -1
-    initial = subj
+    initial = str(subj)
     print("~~~~~~~~~~~~~~~~~~~~")
     print(type(subj))
     print(subj)
-    subj = subj.lower()
+    subj = str(subj).lower()
     temp = subj.split()
     # print("ENTER compound_extraction: ")
 
@@ -599,20 +599,14 @@ def add_settings(sent, num, subject, negation, world):
             if str(sent.text_token[num]).lower() in world.settings:
                 if world.settings[str(sent.text_token[num]).lower()].type == "LOC":
                     current_location["LOC"] = ent_text
-                elif world.settings[str(sent.text_token[num])].type == "TIME":
+                elif world.settings[str(sent.text_token[num]).lower()].type == "TIME":
                     current_location["TIME"] = ent_text
 
         for c in list_of_char:
             if str(c) in world.characters and current_location:
-                char = world.characters[str(c)]
-                for key, value in current_location.items():
-                    if value:
-                        char.inSetting[key] = value
+                world.characters[str(c)].inSetting = current_location
             elif str(c) in world.objects and current_location:
-                obj = world.objects[str(c)]
-                for key, value in current_location.items():
-                    if value:
-                        obj.inSetting[key] = value
+                world.objects[str(c)].inSetting = current_location
     return is_setting
 
 
@@ -644,6 +638,7 @@ def convert_indef_pron(sent):
 
     sent = " ".join(split)
     return sent
+
 
 def coref_resolution(s, sent_curr, sent_bef, world, isFirst, ie_fileWriter):
     print("ENTERED coref_resolution")
@@ -692,29 +687,33 @@ def coref_resolution(s, sent_curr, sent_bef, world, isFirst, ie_fileWriter):
 
         if len(rep) > 0 and len(scores) > 0:
             for key, value in rep.items():
+                name = str(value).lower().replace('a ','')
+                name = name.replace('an ','')
+                name = name.replace('the ','')
+
                 if str(key).lower() == "his" or str(key).lower() == "hers" or str(key).lower() == "their" or str(key).lower() == "our" or str(key).lower() == "its":
                     sent_curr = re.findall(r"[\w']+|[.,!?;]", sent_curr)
                     for i in range(len(sent_curr)):
                         if sent_curr[i].lower() == str(key).lower():
-                            sent_curr[i] = str(value) + "'s"
+                            sent_curr[i] = str(name) + "'s"
 
                     sent_curr = " ".join(sent_curr)
                 else:
                     sent_curr = re.findall(r"[\w']+|[.,!?;]", sent_curr)
                     for i in range(len(sent_curr)):
                         if sent_curr[i].lower() == str(key).lower():
-                            sent_curr[i] = str(value)
+                            sent_curr[i] = str(name)
 
                     sent_curr = " ".join(sent_curr)
 
-                if (str(value) not in world.characters) and (str(value) not in world.objects):
+                if (str(name) not in world.characters) and (name not in world.objects):
                     if (str(key).lower() == "he") or (str(key).lower() == "his") or (str(key).lower() == "him"):
                         new_character = Character()
-                        new_character.name = str(value)
-                        new_character.id = str(value)
+                        new_character.name = name
+                        new_character.id = name
                         new_character.gender = "M"
                         new_character.type = []
-                        type = find_ent_index(s, str(value))
+                        type = find_ent_index(s, name)
                         if type != None:
                             print(type)
                             new_character.type.append(type)
@@ -723,11 +722,11 @@ def coref_resolution(s, sent_curr, sent_bef, world, isFirst, ie_fileWriter):
 
                     elif (str(key).lower() == "she") or (str(key).lower() == "her") or (str(key).lower() == "hers"):
                         new_character = Character()
-                        new_character.name = str(value)
-                        new_character.id = str(value)
+                        new_character.name = name
+                        new_character.id = name
                         new_character.gender = "F"
                         new_character.type = []
-                        type = find_ent_index(s, str(value))
+                        type = find_ent_index(s, name)
                         if type != None:
                             print(type)
                             new_character.type.append(type)

@@ -34,8 +34,8 @@ endstorygen = False
 endconvo = False
 
 story_list = []
-turn_count = 0
-userid = -1
+turn_count = 5 #change back to 0
+userid = 30
 username = ""
 secret_code = ""
 
@@ -77,7 +77,7 @@ def orsen():
 		new_world(storyId)
 		#reset reprompt count
 		manwal_kawnt = 0
-		turn_count = 1
+		turn_count = 5 #change back to 0
 		story_list = []
 		#greet user (app.ask)
 		data = {"conversationToken":"{\"state\":null,\"data\":{}}","expectUserResponse":True,"expectedInputs":[{"inputPrompt":{"initialPrompts":[{"textToSpeech":"Hi! What's your name?"}],"noInputPrompts":[{"textToSpeech":tts,"displayText":dt}]},"possibleIntents":[{"intent":"actions.intent.TEXT"}]}]}

@@ -222,7 +222,7 @@ def get_concept_like(relation, first="", second=""):
           "score, " \
           "valid " \
           "FROM local_concepts " \
-          "WHERE first LIKE '%\%s%' AND second LIKE '%\%s%' AND relation = '\%s' AND valid = \%s"
+          "WHERE first LIKE '%"+str(first)+"%' AND second LIKE '%"+str(second)+"%' AND relation = '"+str(relation)+"'"
 
     conn = SqlConnConcepts.get_connection()
     cursor = conn.cursor()
@@ -230,7 +230,7 @@ def get_concept_like(relation, first="", second=""):
     resulting = []
 
     try:
-        cursor.execute(sql, (first, second, relation,str(1),))
+        cursor.execute(sql)
         # Fetch all the rows in a list of lists.
         result = cursor.fetchall()
         print("LOCAL, LENGTH OF RESULT:", len(result))

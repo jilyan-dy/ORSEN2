@@ -237,32 +237,37 @@ def retrieve_output(coreferenced_text, world_id, userid, dm_fileWriter):
                     #Follow Up Functions
                     temp_response = get_follow_up_string(prev_response)
                     
+                    #Get the entire local concept
+                    last_rep_follow_up_rels = prev_response.follow_up_relations
+                    
                     if temp_response == None:
                         # MINUS, this means there is only one relation sa move template
-                        #Get the entire local concept
-                        last_rep_follow_up_rels = prev_response.follow_up_relations
-                        local_concept = DBO_Local_Concept.get_concept_by_id(int(last_rep_follow_up_rels[0][1]))
-                        dm_fileWriter.write("User answered no to suggestion. \n")
-                        dm_fileWriter.write("Deduct Local Concept ID: " + str(local_concept.id) + "\n")
-                        if local_concept.userid != userid:
-                            new_score = local_concept.score - 1.0     #Minus the score
-                            dm_fileWriter.write("Local Concept score: " + str(local_concept.score) + "\n")
-                            dm_fileWriter.write("Local Concept new score: " + str(new_score) + "\n")
-                            dm_fileWriter.write("\n")
-                            DBO_Local_Concept.update_score(local_concept.id, new_score) #Update the score
+                        if len(last_rep_follow_up_rels) != 0:
+                            local_concept = DBO_Local_Concept.get_concept_by_id(int(last_rep_follow_up_rels[0][1]))
+                            dm_fileWriter.write("User answered no to suggestion. \n")
+                            dm_fileWriter.write("Deduct Local Concept ID: " + str(local_concept.id) + "\n")
+                            if local_concept.userid != userid:
+                                new_score = local_concept.score - 1.0     #Minus the score
+                                dm_fileWriter.write("Local Concept score: " + str(local_concept.score) + "\n")
+                                dm_fileWriter.write("Local Concept new score: " + str(new_score) + "\n")
+                                dm_fileWriter.write("\n")
+                                DBO_Local_Concept.update_score(local_concept.id, new_score) #Update the score
 
                         output = suggest_again(world, coreferenced_text, dm_fileWriter)
                     else:
-                        output = Move.Move(template=["Which one is wrong? " + temp_response.get_string_template()], type_num=MOVE_FOLLOW_UP2)                                       
-                        dm_fileWriter.write("Follow Up # 2. \n")
-                        output.move_id = prev_response.move_id
-                        output.follow_up_relations =  prev_response.follow_up_relations
-                        output.dict_nodes = prev_response.dict_nodes
-                        output.choices_relationID = temp_response.choices_relationID
-                        output.subjects_for_suggestion = prev_response.subjects_for_suggestion
+                        if len(last_rep_follow_up_rels) != 0:
+                            output = Move.Move(template=["Which one is wrong? " + temp_response.get_string_template()], type_num=MOVE_FOLLOW_UP2)                                       
+                            dm_fileWriter.write("Follow Up # 2. \n")
+                            output.move_id = prev_response.move_id
+                            output.follow_up_relations =  prev_response.follow_up_relations
+                            output.dict_nodes = prev_response.dict_nodes
+                            output.choices_relationID = temp_response.choices_relationID
+                            output.subjects_for_suggestion = prev_response.subjects_for_suggestion
 
-                        print(temp_response.choices_relationID)
-                        dm_fileWriter.write("MULTIPLE CHOICE" + str(temp_response.choices_relationID) + "\n")
+                            print(temp_response.choices_relationID)
+                            dm_fileWriter.write("MULTIPLE CHOICE" + str(temp_response.choices_relationID) + "\n")
+                        else:
+                            output = suggest_again(world, coreferenced_text, dm_fileWriter)
                 
                 else:
                     output = Move.Move(template=["Sorry, I don't understand. Please answer by don't like or wrong"], type_num=MOVE_FOLLOW_UP1)
@@ -378,7 +383,6 @@ def generate_response(move_code, world, remove_index, text, dm_fileWriter):
         DATABASE_TYPE = DBO_Concept
         db_type = "global"
 
-    print(DATABASE_TYPE)
 
     choices = []
     subject = None

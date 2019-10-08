@@ -64,8 +64,10 @@ def extract_info(userid, text, ie_fileWriter):
         infoextraction.event_extraction(s, world, "ROOT")
 
     print("-------- CHARACTERS")
+    ie_fileWriter.write("-------- CHARACTERS")
     for c in world.characters:
         print(world.characters[c])
+        ie_fileWriter.write(world.characters[c].__str__())
         for a in world.characters[c].attributes:
             print("attr", a.relation, a.name, a.isNegated)
 
@@ -108,6 +110,7 @@ def extract_info(userid, text, ie_fileWriter):
         # add new relations to local kb
         if extracted != []:
             infoextraction.add_relations_to_local(userid, extracted)
+            result = None
         else:
             temp = infoextraction.find_unkown_word(sent) 
             if temp != None:
